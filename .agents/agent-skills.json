@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "packageVersion": "1.3.0",
+  "installedSkills": {
+    "caveman-commit": {
+      "version": "1.3.0"
+    },
+    "project-docs": {
+      "version": "1.3.0"
+    }
+  }
+}
