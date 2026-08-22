@@ -1,6 +1,6 @@
 ---
 
-# 001-ADR: Use Pydantic for Core Data Schemas
+# 002-ADR: Use Pydantic for Core Data Schemas
 
 **Date:** 2026-08-20
 **Status:** Accepted
@@ -52,7 +52,7 @@ Pydantic is a robust data validation library for Python. We chose it because it 
 
 ## Follow-up Actions
 
-- [x] Ensure `pydantic` is added to `pyproject.toml` dependencies
+- [x] Ensure `pydantic` is added to `pyproject.toml` dependencies — added 2026-08-22 via `uv add pydantic` (v2.13.4); was previously missing despite being marked complete
 
 ## References
 

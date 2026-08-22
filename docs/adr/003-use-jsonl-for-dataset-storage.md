@@ -1,6 +1,6 @@
 ---
 
-# 002-ADR: Use JSONL as the Primary Dataset Format
+# 003-ADR: Use JSONL as the Primary Dataset Format
 
 **Date:** 2026-08-20
 **Status:** Accepted
