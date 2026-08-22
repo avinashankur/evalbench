@@ -1,8 +1,13 @@
-from pydantic import BaseModel
+import uuid
+import time
 
+from pydantic import BaseModel
+from enum import Enum
+from typing import Optional, Any
+from pydantic import Field, field_validator
 
 class TestCase(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4v))
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     question: str
     context: Optional[str] = None
     expected_answer: Optional[str] = None
@@ -108,4 +113,4 @@ class TestCaseResult(BaseModel):
 
     # Summary of the test case
     def summary(self) -> dict[str, float]:
-        return {r.evaluator_name: r.score for r in self._eval_results}
+        return {r.evaluator_name: r.score for r in self.eval_results}
