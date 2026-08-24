@@ -1,10 +1,10 @@
 from typing import Type
 
-from eval_bench.providers.anthropic_provider import AnthropicProvider
-from eval_bench.providers.base import LLMProvider
-from eval_bench.providers.gemini_provider import GeminiProvider
-from eval_bench.providers.mock_provider import MockProvider
-from eval_bench.providers.openai_provider import OpenAIProvider
+from evalbench.providers.anthropic_provider import AnthropicProvider
+from evalbench.providers.base import LLMProvider
+from evalbench.providers.gemini_provider import GeminiProvider
+from evalbench.providers.mock_provider import MockProvider
+from evalbench.providers.openai_provider import OpenAIProvider
 
 _REGISTRY: dict[str, Type[LLMProvider]] = {
     "openai": OpenAIProvider,

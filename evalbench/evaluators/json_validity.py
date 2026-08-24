@@ -4,7 +4,7 @@ from evalbench.evaluators.base import Evaluator
 from evalbench.schema import LLMResponse, EvalResult, TestCase
 from evalbench.evaluators._json_utils import extract_json
 
-class JSONValdityEvaluator(Evaluator):
+class JSONValidityEvaluator(Evaluator):
     """Passes if the response contains valid JSON (optionally unwrapping markdown code fences)."""
 
     name = "json_evaluator"
