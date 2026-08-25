@@ -1,7 +1,7 @@
 # CONTEXT.md
 
 > This file provides essential context for AI coding assistants and new contributors. It is intentionally dense — read fully before making changes.  
-> Last updated: 2026-08-24
+> Last updated: 2026-08-25
 
 ---
 
@@ -17,6 +17,7 @@
 | --- | --- | --- | --- |
 | Language | Python | >= 3.13 | Standard type hinting encouraged |
 | Package Manager | uv / pip | standard pyproject.toml | Managed via `pyproject.toml` |
+| CLI Framework | click | >= 8.4.2 | Used for the `evalbench` CLI entry point |
 | Core Runtime | Python 3.13 | 3.13+ | Virtual environment at `.venv` |
 | Data Validation | pydantic | >= 2.13.4 | Enforces strict schemas (e.g., `TestCase`, `EvalResult`) |
 | Results Database | PostgreSQL (asyncpg) | >= 0.31.0 | Persistent metrics and trace storage |
@@ -30,6 +31,7 @@
 ```
 .
 ├── evalbench/          - Core application package
+│   ├── cli.py          - CLI commands and execution via click
 │   ├── config.py       - Configuration management
 │   ├── engine.py       - Core evaluation execution logic
 │   ├── schema.py       - Pydantic models (TestCase, EvalResult, etc.)
@@ -59,7 +61,7 @@
 ## Key Patterns
 
 **Project entry point:**
-- `main.py` serves as the entry point function (`def main()`).
+- `evalbench/cli.py` serves as the entry point function (`def cli()`), exposed via the `evalbench` shell command.
 
 **Dependencies:**
 - Configured via `pyproject.toml`.
@@ -89,13 +91,11 @@
 ## Development Workflow
 
 ```bash
-# Activate virtual environment
-source .venv/bin/activate  # on Unix / bash
-# or on Windows PowerShell:
-# .\.venv\Scripts\Activate.ps1
+# Sync dependencies
+uv sync
 
-# Run main script
-python main.py
+# Run evaluation
+uv run evalbench run path/to/config.yaml
 ```
 
 Before committing:

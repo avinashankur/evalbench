@@ -33,21 +33,28 @@
 git clone https://github.com/your-org/evalbench.git
 cd evalbench
 
-# Activate existing venv (Windows PowerShell)
-.\.venv\Scripts\Activate.ps1
-# Or create a fresh virtual environment:
-# python -m venv .venv
+# Sync dependencies and install the project using uv
+uv sync
+
+# (Optional) Sync with all provider SDKs
+uv sync --all-extras
 ```
 
 ### Run
 
+Execute evaluations from a config file using the `evalbench` CLI. By default, results are saved locally as JSONL files.
+
 ```bash
-python main.py
+uv run evalbench run path/to/config.yaml
 ```
 
 Output:
 ```text
-Hello from evalbench!
+Dataset: MMLU-subset (100 test cases)
+Model:   openai/gpt-4o
+Evaluators: exact_match
+...
+Saved to results/<run_id>.jsonl
 ```
 
 ---
@@ -56,7 +63,7 @@ Hello from evalbench!
 
 ```text
 evalbench/
-├── main.py           # Application entry point
+├── evalbench/        # Core package (engine, CLI, storage, etc.)
 ├── pyproject.toml    # Python project definition & dependencies
 ├── ARCHITECTURE.md   # System architecture documentation
 ├── CONTEXT.md        # AI assistant context & developer guide

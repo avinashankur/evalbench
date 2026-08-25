@@ -1,6 +1,6 @@
 # Architecture — evalbench
 
-> **Last updated:** 2026-08-24  
+> **Last updated:** 2026-08-25  
 > **Authors:** evalbench team  
 > **Status:** Draft  
 
@@ -37,14 +37,14 @@ Rel(evalbench, target_model, "Sends test prompts & retrieves responses", "HTTP /
 ```mermaid
 C4Container
 Person(developer, "Developer")
-Container(cli, "CLI / Entry Point", "Python 3.13+", "Entry point for running benchmark evaluations (`main.py`)")
+Container(cli, "CLI / Entry Point", "Python 3.13+", "Entry point for running benchmark evaluations (`evalbench run`)")
 Container(worker, "Background Worker", "Python 3.13+", "Daemon process executing evaluation jobs")
 Container(engine, "Eval Core Engine", "Python 3.13+", "Core benchmarking logic, dataset loaders, metrics evaluation")
 ContainerDb(redis, "Job Queue", "Redis", "Queues evaluation jobs")
 ContainerDb(postgres, "Results Storage", "PostgreSQL", "Stores run outputs and evaluation metrics")
 
 Rel(developer, cli, "Invokes", "CLI command")
-Rel(cli, redis, "Enqueues evaluation jobs", "Redis Protocol")
+Rel(cli, engine, "Runs locally", "Python function calls")
 Rel(worker, redis, "Polls for jobs", "Redis Protocol")
 Rel(worker, engine, "Executes jobs", "Python function calls")
 Rel(engine, postgres, "Writes benchmark outputs", "AsyncPG / TCP")
@@ -54,7 +54,7 @@ Rel(engine, postgres, "Writes benchmark outputs", "AsyncPG / TCP")
 
 | Container | Technology | Responsibility | Scales |
 | --- | --- | --- | --- |
-| CLI / Entry Point | Python 3.13+ | Command-line parsing and enqueueing jobs | Local execution |
+| CLI / Entry Point | Python 3.13+ | Command-line parsing, running evaluations locally, and outputting to JSONL | Local execution |
 | Background Worker | Python 3.13+ | Pulls jobs from queue and executes | Horizontal (Multi-process) |
 | Eval Core Engine | Python 3.13+ | Benchmark execution, providers, evaluators | Within worker |
 | Job Queue | Redis | Buffering and distributing jobs | Redis cluster |
@@ -69,7 +69,7 @@ Rel(engine, postgres, "Writes benchmark outputs", "AsyncPG / TCP")
 ```mermaid
 graph LR
   subgraph CLI Layer
-    CLI[main.py]
+    CLI[cli.py]
   end
 
   subgraph Worker Layer
@@ -83,15 +83,17 @@ graph LR
   subgraph Storage Layer
     RedisQueue[storage/redis_queue.py]
     PostgresStore[storage/postgres_store.py]
+    LocalStore[results.py]
   end
 
-  CLI --> RedisQueue
+  CLI --> Engine
+  CLI --> LocalStore
   Worker --> RedisQueue
   Worker --> Engine
   Engine --> Evaluators
   Engine --> Providers
   Engine --> Retrieval
-  Engine --> PostgresStore
+  Worker --> PostgresStore
 ```
 
 ---
@@ -100,16 +102,20 @@ graph LR
 
 - **Python 3.13+ runtime** — Takes advantage of modern Python features and performance improvements.
 - **Async Execution** — Heavy use of `asyncio` for scalable LLM API calls via `asyncpg`.
-- **Redis + Worker Queue** — Migrated from synchronous execution to a distributed queue to support large-scale dataset evaluations.
-- **PostgreSQL Storage** — Selected for robust relational metric storage and querying over flat files.
+- **Local CLI Execution** — CLI evaluations run locally via asyncio and output to JSONL, allowing quick iteration without infrastructure.
+- **Redis + Worker Queue** — For distributed, large-scale dataset evaluations, jobs are executed via Redis queues and Postgres storage.
 
 ---
 
 ## Data Flow — Key Scenarios
 
-### Benchmark Execution Flow
+### Local Benchmark Execution (CLI)
 
-`Developer → main.py (Enqueue) → Redis (Queue) → Worker (Dequeue) → EvalEngine → Target LLM API → Postgres (Store Results)`
+`Developer → evalbench run → EvalEngine → Target LLM API → JSONLResultStore (Local)`
+
+### Distributed Benchmark Execution (Worker)
+
+`API/Script → RedisQueue (Enqueue) → Worker (Dequeue) → EvalEngine → Target LLM API → PostgresStore (Store Results)`
 
 ---
 
