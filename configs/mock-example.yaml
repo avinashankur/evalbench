@@ -1,0 +1,23 @@
+# Run with: evalbench run configs/mock-example.yaml
+# Uses the mock provider so it works out of the box with zero API keys —
+# swap `provider: mock` for `provider: anthropic` / `openai` / `gemini`
+# and set the matching *_API_KEY env var to hit a real model.
+
+dataset: datasets/customer-support-v1.jsonl
+
+model:
+  provider: mock
+  name: mock-model
+  temperature: 0.0
+
+prompt_template: "Context: {context}\n\nQuestion: {question}\n\nAnswer concisely."
+system_prompt: "You are a helpful, concise customer support assistant."
+
+concurrency: 5
+
+evaluators:
+  - contains
+  - json_validity
+  - name: latency
+    max_latency_ms: 2000
+  - token_usage

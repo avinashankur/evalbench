@@ -1,0 +1,48 @@
+# Run with: evalbench run configs/rag-example.yaml
+# Demonstrates the full Phase 4 RAG pipeline using the in-memory retriever
+# and mock providers, so it runs with zero API keys and no vector DB.
+#
+# In production: swap `retriever.type` for a real backend by implementing
+# Retriever.retrieve() against it (e.g. pgvector/Pinecone/Weaviate) and
+# building it in Python instead of the `in_memory` YAML shortcut — nothing
+# else in this config or the engine changes.
+
+dataset: datasets/customer-support-v1.jsonl
+
+model:
+  provider: mock
+  name: rag-target-mock
+
+prompt_template: "Answer using ONLY the context below.\n\nContext:\n{context}\n\nQuestion: {question}"
+system_prompt: "You are a helpful support assistant. Only use the provided context."
+
+concurrency: 5
+
+retriever:
+  type: in_memory
+  top_k: 2
+  documents:
+    - "Customers can request a refund within 30 days of purchase. Refunds are processed to the original payment method within 5 business days."
+    - "To reset your password, go to Settings > Account > Reset Password and follow the link sent to your email."
+    - "We ship to over 40 countries. International orders typically arrive within 7-14 business days."
+    - "We accept Visa, Mastercard, American Express, and PayPal for all purchases."
+    - "Subscriptions can be cancelled anytime from Settings > Billing > Cancel Subscription. No cancellation fees apply."
+
+evaluators:
+  - name: answer_relevance
+    judge_model:
+      provider: mock
+      name: judge-mock
+    pass_threshold: 0.6
+
+  - name: faithfulness
+    judge_model:
+      provider: mock
+      name: judge-mock
+    pass_threshold: 0.6
+
+  - name: context_precision
+    judge_model:
+      provider: mock
+      name: judge-mock
+    pass_threshold: 0.5

@@ -1,0 +1,25 @@
+# Run with: evalbench run configs/llm-judge-example.yaml
+# Demonstrates the llm_judge evaluator using mock providers for both the
+# target model AND the judge (so it runs with zero API keys). In practice
+# you'd usually judge with a different/stronger model than the one under
+# test — e.g. target: gpt-4o-mini, judge: claude-sonnet-4-6.
+
+dataset: datasets/customer-support-v1.jsonl
+
+model:
+  provider: mock
+  name: target-mock-model
+
+prompt_template: "Context: {context}\n\nQuestion: {question}\n\nAnswer concisely."
+system_prompt: "You are a helpful, concise customer support assistant."
+
+concurrency: 5
+
+evaluators:
+  - contains
+  - name: llm_judge
+    judge_model:
+      provider: mock            # swap for anthropic / openai / gemini in real use
+      name: judge-mock-model
+    pass_threshold: 0.6
+    max_score: 5
