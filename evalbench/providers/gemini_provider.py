@@ -1,5 +1,8 @@
-from evalbench.providers.base import LLMProvider
-from eval_bench.schema import LLMResponse
+import os
+from typing import Optional
+
+from evalbench.providers.base import LLMProvider, ProviderError
+from evalbench.schema import LLMResponse
 
 _PRICING_PER_1M = {
     "gemini-2.5-flash": (0.30, 2.50),
@@ -29,14 +32,21 @@ class GeminiProvider(LLMProvider):
         client = self._get_client()
         full_prompt = f"{system}\n\n{prompt}" if system else prompt
 
+        config = dict(self.generation_kwargs)
+        if "temperature" not in config:
+            config["temperature"] = 0.0
+        if "max_output_tokens" not in config:
+            config["max_output_tokens"] = config.pop("max_tokens", 1024)
+        else:
+            config.pop("max_tokens", None)
+
+        from google.genai import types
+
         try:
             resp = await client.aio.models.generate_content(
                 model=self.model,
                 contents=full_prompt,
-                config={
-                    "temperature": self.generation_kwargs.get("temperature", 0.0),
-                    "max_output_tokens": self.generation_kwargs.get("max_tokens", 1024),
-                },
+                config=types.GenerateContentConfig(**config),
             )
         except Exception as e:
             raise ProviderError(str(e)) from e

@@ -1,5 +1,8 @@
-from eval_bench.providers.base import LLMProvider, ProviderError
-from eval_bench.schema import LLMResponse
+import os
+from typing import Optional
+
+from evalbench.providers.base import LLMProvider, ProviderError
+from evalbench.schema import LLMResponse
 
 _PRICING_PER_1M = {
     "claude-sonnet-4-6": (3.00, 15.00),
@@ -29,17 +32,28 @@ class AnthropicProvider(LLMProvider):
         return self._client
 
     async def _call(self, prompt: str, system: Optional[str] = None) -> LLMResponse:
+        import anthropic
         client = self._get_client()
+
+        kwargs = dict(self.generation_kwargs)
+        if "max_tokens" not in kwargs:
+            kwargs["max_tokens"] = 1024
+        if "temperature" not in kwargs:
+            kwargs["temperature"] = 0.0
+
+        sys_prompt = system or kwargs.pop("system", None)
+        if sys_prompt:
+            kwargs["system"] = sys_prompt
+
+        messages: list[anthropic.types.MessageParam] = [
+            {"role": "user", "content": prompt}
+        ]
+
         try:
             resp = await client.messages.create(
                 model=self.model,
-                max_tokens=self.generation_kwargs.get("max_tokens", 1024),
-                temperature=self.generation_kwargs.get("temperature", 0.0),
-                system=system or self.generation_kwargs.get("system", ""),
-                messages=[{
-                    "role": "user",
-                    "content": prompt
-                }],
+                messages=messages,
+                **kwargs,
             )
         except Exception as e:  # noqa: BLE001
             raise ProviderError(str(e)) from e

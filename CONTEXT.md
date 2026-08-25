@@ -18,6 +18,7 @@
 | Language | Python | >= 3.13 | Standard type hinting encouraged |
 | Package Manager | uv / pip | standard pyproject.toml | Managed via `pyproject.toml` |
 | CLI Framework | click | >= 8.4.2 | Used for the `evalbench` CLI entry point |
+| Configuration | pyyaml | >= 6.0.3 | Parses run configurations |
 | Core Runtime | Python 3.13 | 3.13+ | Virtual environment at `.venv` |
 | Data Validation | pydantic | >= 2.13.4 | Enforces strict schemas (e.g., `TestCase`, `EvalResult`) |
 | Results Database | PostgreSQL (asyncpg) | >= 0.31.0 | Persistent metrics and trace storage |
@@ -43,7 +44,6 @@
 │       ├── postgres_store.py  - PostgreSQL async operations
 │       ├── redis_queue.py     - Job queue management
 │       └── worker.py          - Background worker daemon
-├── main.py             - Primary CLI / entry point execution
 ├── pyproject.toml      - Project dependencies and metadata configuration
 ├── README.md           - Root project orientation documentation
 ├── ARCHITECTURE.md     - High-level architecture map (C4 model)
@@ -94,8 +94,13 @@
 # Sync dependencies
 uv sync
 
-# Run evaluation
+# Run evaluation locally
 uv run evalbench run path/to/config.yaml
+
+# Or use distributed mode:
+uv run evalbench worker                 # Start background daemon
+uv run evalbench enqueue path/to/config.yaml  # Queue job
+uv run evalbench status <job_id>        # Check progress and results
 ```
 
 Before committing:

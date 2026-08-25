@@ -1,13 +1,15 @@
 import os
 from typing import Optional
 
-from eval_bench.providers.base import LLMProvider, ProviderError
-from eval_bench.schema import LLMResponse
+from evalbench.providers.base import LLMProvider, ProviderError
+from evalbench.schema import LLMResponse
 
 _PRICING_PER_1M = {
     "gpt-4o": (2.50, 10.00),
     "gpt-4o-mini": (0.15, 0.60),
-    "gpt-4.1": (2.00, 8.00),
+    "gpt-4-turbo": (10.00, 30.00),
+    "o1-preview": (15.00, 60.00),
+    "o1-mini": (3.00, 12.00),
 }
 
 
@@ -32,16 +34,38 @@ class OpenAIProvider(LLMProvider):
     async def _call(self, prompt: str, system: Optional[str] = None) -> LLMResponse:
         client = self._get_client()
         messages = []
+        
+        is_o1 = self.model.startswith("o1-")
+        
         if system:
-            messages.append({"role": "system", "content": system})
+            if is_o1:
+                # o1 models do not support the system role, append as user
+                messages.append({"role": "user", "content": f"System Instruction:\n{system}"})
+            else:
+                messages.append({"role": "system", "content": system})
+                
         messages.append({"role": "user", "content": prompt})
+
+        kwargs = dict(self.generation_kwargs)
+        
+        if is_o1:
+            # o1 models use max_completion_tokens and do not support temperature
+            if "max_tokens" in kwargs:
+                kwargs["max_completion_tokens"] = kwargs.pop("max_tokens")
+            elif "max_completion_tokens" not in kwargs:
+                kwargs["max_completion_tokens"] = 1024
+            kwargs.pop("temperature", None)
+        else:
+            if "max_tokens" not in kwargs:
+                kwargs["max_tokens"] = 1024
+            if "temperature" not in kwargs:
+                kwargs["temperature"] = 0.0
 
         try:
             resp = await client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                temperature=self.generation_kwargs.get("temperature", 0.0),
-                max_tokens=self.generation_kwargs.get("max_tokens", 1024),
+                **kwargs,
             )
         except Exception as e:  # noqa: BLE001
             raise ProviderError(str(e)) from e

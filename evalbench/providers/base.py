@@ -1,6 +1,6 @@
 import asyncio
 import time
-from abc import ABC
+from abc import ABC, abstractmethod
 from evalbench.schema import LLMResponse
 from typing import Optional
 
@@ -15,7 +15,7 @@ class LLMProvider(ABC):
     def __init__(
         self,
         model: str,
-        api_key: str,
+        api_key: Optional[str] = None,
         max_retries: int = 3,
         base_backoff_seconds: float = 1.0,
         timeout_seconds: float = 60.0,

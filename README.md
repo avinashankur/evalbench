@@ -15,8 +15,11 @@
 ## Features
 
 - **Python 3.13+ native** — Designed for modern Python standards.
-- **Evaluation Pipelines** — Run standardized benchmarks against target models. <!-- TODO: update features list as features are built -->
-- **Metric Analytics** — Track performance across multiple evaluation criteria. <!-- TODO -->
+- **Provider-agnostic** — Swap between OpenAI, Anthropic, Gemini, or a mock provider via config.
+- **Built-in evaluators** — Exact match, contains, JSON validity, latency, token usage, and LLM-as-judge.
+- **RAG evaluation** — Faithfulness, answer relevance, context precision, and context recall metrics.
+- **Local or distributed** — Run evaluations in the foreground, or scale out with Redis queues and PostgreSQL storage.
+- **YAML-driven configs** — Define dataset, model, evaluators, and retriever in a single config file.
 
 ---
 
@@ -57,12 +60,28 @@ Evaluators: exact_match
 Saved to results/<run_id>.jsonl
 ```
 
+### Distributed Execution
+
+For large-scale evaluations, `evalbench` supports distributed execution using Redis and PostgreSQL.
+
+```bash
+# Start a background worker daemon
+uv run evalbench worker
+
+# Queue an evaluation job
+uv run evalbench enqueue path/to/config.yaml
+
+# Check job status and fetch results
+uv run evalbench status <job_id>
+```
+
 ---
 
 ## Project Structure
 
 ```text
 evalbench/
+├── configs/          # Example evaluation configs (YAML)
 ├── evalbench/        # Core package (engine, CLI, storage, etc.)
 ├── pyproject.toml    # Python project definition & dependencies
 ├── ARCHITECTURE.md   # System architecture documentation

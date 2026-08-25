@@ -2,8 +2,8 @@ import asyncio
 import random
 from typing import Callable, Optional
 
-from eval_bench.providers.base import LLMProvider
-from eval_bench.schema import LLMResponse
+from evalbench.providers.base import LLMProvider
+from evalbench.schema import LLMResponse
 
 
 class MockProvider(LLMProvider):

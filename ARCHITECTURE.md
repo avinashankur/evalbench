@@ -44,7 +44,9 @@ ContainerDb(redis, "Job Queue", "Redis", "Queues evaluation jobs")
 ContainerDb(postgres, "Results Storage", "PostgreSQL", "Stores run outputs and evaluation metrics")
 
 Rel(developer, cli, "Invokes", "CLI command")
-Rel(cli, engine, "Runs locally", "Python function calls")
+Rel(cli, engine, "Runs locally (`run`)", "Python function calls")
+Rel(cli, redis, "Enqueues & checks status (`enqueue`, `status`)", "Redis Protocol")
+Rel(cli, postgres, "Fetches results (`status`)", "AsyncPG / TCP")
 Rel(worker, redis, "Polls for jobs", "Redis Protocol")
 Rel(worker, engine, "Executes jobs", "Python function calls")
 Rel(engine, postgres, "Writes benchmark outputs", "AsyncPG / TCP")
@@ -54,7 +56,7 @@ Rel(engine, postgres, "Writes benchmark outputs", "AsyncPG / TCP")
 
 | Container | Technology | Responsibility | Scales |
 | --- | --- | --- | --- |
-| CLI / Entry Point | Python 3.13+ | Command-line parsing, running evaluations locally, and outputting to JSONL | Local execution |
+| CLI / Entry Point | Python 3.13+ | Runs local evaluations, enqueues jobs, checks status, and runs worker daemon | Local execution |
 | Background Worker | Python 3.13+ | Pulls jobs from queue and executes | Horizontal (Multi-process) |
 | Eval Core Engine | Python 3.13+ | Benchmark execution, providers, evaluators | Within worker |
 | Job Queue | Redis | Buffering and distributing jobs | Redis cluster |
@@ -88,6 +90,8 @@ graph LR
 
   CLI --> Engine
   CLI --> LocalStore
+  CLI --> RedisQueue
+  CLI --> PostgresStore
   Worker --> RedisQueue
   Worker --> Engine
   Engine --> Evaluators
@@ -115,7 +119,8 @@ graph LR
 
 ### Distributed Benchmark Execution (Worker)
 
-`API/Script → RedisQueue (Enqueue) → Worker (Dequeue) → EvalEngine → Target LLM API → PostgresStore (Store Results)`
+`Developer → evalbench enqueue → RedisQueue (Enqueue) → Worker (Dequeue) → EvalEngine → Target LLM API → PostgresStore (Store Results)`
+`Developer → evalbench status → RedisQueue + PostgresStore (Read)`
 
 ---
 
