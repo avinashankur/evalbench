@@ -1,4 +1,5 @@
 import asyncio
+
 import click
 
 from evalbench.config import load_config
@@ -88,7 +89,7 @@ def enqueue(config_path: str, redis_url: str):
     # Validate the config parses before enqueuing. Fail fast on typos
     load_config(config_path)
 
-    from evalbench.storage.redis_queue import RedisJobQueue, EvalJob
+    from evalbench.storage.redis_queue import EvalJob, RedisJobQueue
 
     async def _enqueue() -> str:
         async with RedisJobQueue(redis_url) as queue:
@@ -110,8 +111,8 @@ def enqueue(config_path: str, redis_url: str):
 )
 def status(job_id: str, redis_url: str, postgres_dsn: str):
     """Check the status of a queued evaluation job."""
-    from evalbench.storage.redis_queue import RedisJobQueue, JobStatus
     from evalbench.storage.postgres_store import PostgresResultStore
+    from evalbench.storage.redis_queue import JobStatus, RedisJobQueue
 
     async def _status():
         async with RedisJobQueue(redis_url) as queue:
@@ -151,6 +152,15 @@ def status(job_id: str, redis_url: str, postgres_dsn: str):
         click.echo(f"  {'total cost':<15} ${summary.total_cost_usd():.4f}")
 
     asyncio.run(_status())
+
+
+@cli.command()
+@click.option("--host", default="0.0.0.0", help="Bind address.")
+@click.option("--port", default=8000, type=int, help="Port number.")
+@click.option("--reload", is_flag=True, help="Enable auto-reload for development.")
+def serve(host: str, port: int, reload: bool):
+    import uvicorn
+    uvicorn.run("evalbench.api.app:app", host=host, port=port, reload=reload)
 
 
 if __name__ == "__main__":

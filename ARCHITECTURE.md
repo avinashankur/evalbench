@@ -1,6 +1,6 @@
 # Architecture — evalbench
 
-> **Last updated:** 2026-08-25  
+> **Last updated:** 2026-08-27  
 > **Authors:** evalbench team  
 > **Status:** Draft  
 
@@ -38,15 +38,19 @@ Rel(evalbench, target_model, "Sends test prompts & retrieves responses", "HTTP /
 C4Container
 Person(developer, "Developer")
 Container(cli, "CLI / Entry Point", "Python 3.13+", "Entry point for running benchmark evaluations (`evalbench run`)")
+Container(api, "REST API Server", "FastAPI", "Web interface for managing and triggering evaluations (`evalbench serve`)")
 Container(worker, "Background Worker", "Python 3.13+", "Daemon process executing evaluation jobs")
 Container(engine, "Eval Core Engine", "Python 3.13+", "Core benchmarking logic, dataset loaders, metrics evaluation")
 ContainerDb(redis, "Job Queue", "Redis", "Queues evaluation jobs")
 ContainerDb(postgres, "Results Storage", "PostgreSQL", "Stores run outputs and evaluation metrics")
 
 Rel(developer, cli, "Invokes", "CLI command")
+Rel(developer, api, "Calls", "HTTP")
 Rel(cli, engine, "Runs locally (`run`)", "Python function calls")
 Rel(cli, redis, "Enqueues & checks status (`enqueue`, `status`)", "Redis Protocol")
 Rel(cli, postgres, "Fetches results (`status`)", "AsyncPG / TCP")
+Rel(api, redis, "Enqueues & checks status", "Redis Protocol")
+Rel(api, postgres, "Fetches results", "AsyncPG / TCP")
 Rel(worker, redis, "Polls for jobs", "Redis Protocol")
 Rel(worker, engine, "Executes jobs", "Python function calls")
 Rel(engine, postgres, "Writes benchmark outputs", "AsyncPG / TCP")
@@ -57,6 +61,7 @@ Rel(engine, postgres, "Writes benchmark outputs", "AsyncPG / TCP")
 | Container | Technology | Responsibility | Scales |
 | --- | --- | --- | --- |
 | CLI / Entry Point | Python 3.13+ | Runs local evaluations, enqueues jobs, checks status, and runs worker daemon | Local execution |
+| REST API Server | FastAPI | Web endpoints for checking health, managing evaluations | Local/Horizontal |
 | Background Worker | Python 3.13+ | Pulls jobs from queue and executes | Horizontal (Multi-process) |
 | Eval Core Engine | Python 3.13+ | Benchmark execution, providers, evaluators | Within worker |
 | Job Queue | Redis | Buffering and distributing jobs | Redis cluster |
@@ -72,6 +77,10 @@ Rel(engine, postgres, "Writes benchmark outputs", "AsyncPG / TCP")
 graph LR
   subgraph CLI Layer
     CLI[cli.py]
+  end
+
+  subgraph API Layer
+    API[api/]
   end
 
   subgraph Worker Layer
@@ -92,6 +101,8 @@ graph LR
   CLI --> LocalStore
   CLI --> RedisQueue
   CLI --> PostgresStore
+  API --> RedisQueue
+  API --> PostgresStore
   Worker --> RedisQueue
   Worker --> Engine
   Engine --> Evaluators

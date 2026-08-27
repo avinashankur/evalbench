@@ -1,7 +1,7 @@
 # CONTEXT.md
 
 > This file provides essential context for AI coding assistants and new contributors. It is intentionally dense — read fully before making changes.  
-> Last updated: 2026-08-25
+> Last updated: 2026-08-27
 
 ---
 
@@ -23,6 +23,7 @@
 | Data Validation | pydantic | >= 2.13.4 | Enforces strict schemas (e.g., `TestCase`, `EvalResult`) |
 | Results Database | PostgreSQL (asyncpg) | >= 0.31.0 | Persistent metrics and trace storage |
 | Job Broker | Redis | >= 8.1.0 | Asynchronous job queue for evaluation tasks |
+| REST API | FastAPI / Uvicorn | >= 0.115 | Web API for managing evaluations |
 | Testing | pytest | TBD | <!-- TODO: specify test framework --> |
 
 ---
@@ -32,6 +33,7 @@
 ```
 .
 ├── evalbench/          - Core application package
+│   ├── api/            - REST API application and routing (FastAPI)
 │   ├── cli.py          - CLI commands and execution via click
 │   ├── config.py       - Configuration management
 │   ├── engine.py       - Core evaluation execution logic
@@ -96,6 +98,9 @@ uv sync
 
 # Run evaluation locally
 uv run evalbench run path/to/config.yaml
+
+# Start the REST API server locally
+uv run evalbench serve
 
 # Or use distributed mode:
 uv run evalbench worker                 # Start background daemon

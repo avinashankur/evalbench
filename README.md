@@ -18,6 +18,7 @@
 - **Provider-agnostic** — Swap between OpenAI, Anthropic, Gemini, or a mock provider via config.
 - **Built-in evaluators** — Exact match, contains, JSON validity, latency, token usage, and LLM-as-judge.
 - **RAG evaluation** — Faithfulness, answer relevance, context precision, and context recall metrics.
+- **REST API** — FastAPI-based endpoints for integration and remote execution.
 - **Local or distributed** — Run evaluations in the foreground, or scale out with Redis queues and PostgreSQL storage.
 - **YAML-driven configs** — Define dataset, model, evaluators, and retriever in a single config file.
 
@@ -73,6 +74,14 @@ uv run evalbench enqueue path/to/config.yaml
 
 # Check job status and fetch results
 uv run evalbench status <job_id>
+```
+
+### REST API
+
+You can also start the FastAPI web server to interact with evalbench programmatically:
+
+```bash
+uv run evalbench serve
 ```
 
 ---
