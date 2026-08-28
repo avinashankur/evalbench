@@ -3,10 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from evalbench.api.routers import health
+from evalbench.api.routers import health, runs
 from evalbench.api.settings import Settings
-
-# Assuming these exist or will be created
 from evalbench.storage.postgres_store import PostgresResultStore
 
 
@@ -17,6 +15,7 @@ async def lifespan(app: FastAPI):
     # Initialize Postgres
     postgres_store = PostgresResultStore(settings.postgres_dsn)
     await postgres_store.connect()
+    await postgres_store.ensure_schema()
     app.state.postgres_store = postgres_store
 
     # Initialize Redis
@@ -53,3 +52,4 @@ app.add_middleware(
 )
 
 app.include_router(health.router, prefix="/api/v1")
+app.include_router(runs.router, prefix="/api/v1")

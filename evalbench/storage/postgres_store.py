@@ -134,6 +134,20 @@ class PostgresResultStore(ResultStore):
     def load(self, run_id: str) -> RunSummary:
         return asyncio.run(self.aload(run_id))
 
+    async def aget_run(self, run_id: str) -> dict:
+        assert self._pool is not None, "call connect() first"
+        async with self._pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "SELECT run_id, dataset_name, provider, model, total_test_cases, created_at, metrics FROM runs WHERE run_id = $1::uuid",
+                run_id,
+            )
+        if not row:
+            raise FileNotFoundError(f"no run found for run_id={run_id}")
+        d = dict(row)
+        if isinstance(d.get("metrics"), str):
+            d["metrics"] = json.loads(d["metrics"])
+        return d
+
     async def list_runs(self,
                         dataset_name: Optional[str] = None,
                         limit: int = 50) -> list[dict]:
@@ -161,3 +175,13 @@ class PostgresResultStore(ResultStore):
             out.append(d)
 
         return out
+
+    async def adelete(self, run_id: str) -> bool:
+        """Delete a run and all its test case results. Returns True if the run existed."""
+        assert self._pool is not None, "call connect() first"
+        async with self._pool.acquire() as conn:
+            result = await conn.execute(
+                "DELETE FROM runs WHERE run_id = $1::uuid", run_id
+            )
+            # CASCADE will handle test_case_results
+            return result == "DELETE 1"

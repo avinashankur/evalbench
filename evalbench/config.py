@@ -1,9 +1,9 @@
-import yaml
+import yaml  # noqa: I001
 from pathlib import Path
 from typing import Optional, Any
 from pydantic import BaseModel, Field
 
-from evalbench.schema import Dataset
+from evalbench.schema import Dataset, TestCase
 from evalbench.engine import RunConfig
 from evalbench.providers.registry import get_provider
 from evalbench.providers.base import LLMProvider
@@ -29,7 +29,7 @@ class RetrieverConfig(BaseModel):
 
 
 class EvalRunConfig(BaseModel):
-    dataset: str
+    dataset: str | list[dict]
     model: ModelConfig
     prompt_template: str = "{question}"
     system_prompt: str | None = None
@@ -40,7 +40,13 @@ class EvalRunConfig(BaseModel):
     def build(
         self
     ) -> tuple[Dataset, LLMProvider, list[Evaluator], RunConfig, Optional[Retriever]]:
-        ds = Dataset.from_jsonl(self.dataset)
+        if isinstance(self.dataset, list):
+            ds = Dataset(
+                name="inline",
+                test_cases=[TestCase(**tc) for tc in self.dataset],
+            )
+        else:
+            ds = Dataset.from_jsonl(self.dataset)
         provider = get_provider(
             self.model.provider,
             model=self.model.name,
@@ -65,7 +71,7 @@ class EvalRunConfig(BaseModel):
                 else:
                     evaluators.append(get_evaluator(ev_name, **e))
             else:
-                raise ValueError(f"invalid evaluator entry: {e!r}")
+                raise TypeError(f"invalid evaluator entry: {e!r}")
 
         run_config = RunConfig(
             concurrency=self.concurrency,

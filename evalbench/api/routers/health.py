@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Request
+
 from evalbench.api.schemas import HealthResponse
-from evalbench.providers import registry as provider_registry
 from evalbench.evaluators import registry as evaluator_registry
+from evalbench.providers import registry as provider_registry
 
 router = APIRouter()
 
