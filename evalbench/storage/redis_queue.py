@@ -1,8 +1,8 @@
 import json
 import uuid
+from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Optional
-from dataclasses import dataclass, field, asdict
+from typing import Self
 
 
 class JobStatus(str, Enum):
@@ -14,12 +14,12 @@ class JobStatus(str, Enum):
 
 @dataclass
 class EvalJob:
-    config_path: str
+    config_path: str = ""
     job_id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    config_dict: Optional[dict] = None
+    config_dict: dict | None = None
     status: JobStatus = JobStatus.QUEUED
-    run_id: Optional[str] = None
-    error: Optional[str] = None
+    run_id: str | None = None
+    error: str | None = None
 
     def to_json(self) -> str:
         d = asdict(self)
@@ -57,7 +57,7 @@ class RedisJobQueue:
             await self._client.aclose()
             self._client = None
 
-    async def __aenter__(self) -> "RedisJobQueue":
+    async def __aenter__(self) -> Self:
         await self.connect()
         return self
 
@@ -74,7 +74,7 @@ class RedisJobQueue:
 
         return job.job_id
 
-    async def dequeue(self, timeout: int = 5) -> Optional[EvalJob]:
+    async def dequeue(self, timeout: int = 5) -> EvalJob | None:
         assert self._client is not None, "call connect() first"
         result = await self._client.blpop(self.QUEUE_KEY, timeout=timeout)
 
@@ -98,8 +98,8 @@ class RedisJobQueue:
         self,
         job_id: str,
         status: JobStatus,
-        run_id: Optional[str] = None,
-        error: Optional[str] = None
+        run_id: str | None = None,
+        error: str | None = None,
     ) -> None:
         assert self._client is not None, "call connect() first"
         raw = await self._client.get(self._status_key(job_id))
@@ -120,13 +120,13 @@ class RedisJobQueue:
 
         await self._client.set(self._status_key(job_id), job.to_json())
 
-    async def get_status(self, job_id: str) -> Optional[EvalJob]:
+    async def get_status(self, job_id: str) -> EvalJob | None:
         assert self._client is not None, "call connect() first"
         raw = await self._client.get(self._status_key(job_id))
 
         if isinstance(raw, bytes):
             raw = raw.decode()
-            
+
         return EvalJob.from_json(raw) if raw else None
 
     async def queue_depth(self) -> int:

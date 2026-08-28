@@ -78,10 +78,17 @@ uv run evalbench status <job_id>
 
 ### REST API
 
-You can also start the FastAPI web server to interact with evalbench programmatically:
+You can start the FastAPI web server to interact with evalbench programmatically or via Swagger UI at `http://localhost:8000/docs`:
 
 ```bash
+# Start the API server on port 8000
 uv run evalbench serve
+
+# Key endpoints:
+# POST /api/v1/jobs        - Enqueue evaluation job to Redis
+# GET  /api/v1/jobs/{id}   - Check async job status
+# POST /api/v1/runs        - Trigger direct evaluation run
+# GET  /api/v1/runs/{id}   - Fetch run results from PostgreSQL
 ```
 
 ---
@@ -91,11 +98,11 @@ uv run evalbench serve
 ```text
 evalbench/
 ├── configs/          # Example evaluation configs (YAML)
-├── evalbench/        # Core package (engine, CLI, storage, etc.)
+├── evalbench/        # Core package (engine, CLI, API, storage, evaluators)
 ├── pyproject.toml    # Python project definition & dependencies
-├── ARCHITECTURE.md   # System architecture documentation
-├── CONTEXT.md        # AI assistant context & developer guide
-└── docs/             # Technical docs, PRD, ADRs, runbooks
+├── ARCHITECTURE.md   # System architecture documentation (C4 model)
+├── CONTEXT.md        # AI assistant context & developer primer
+└── docs/             # Technical docs, PRD, ADRs, runbooks, concepts, how-tos
 ```
 
 ---
@@ -104,10 +111,15 @@ evalbench/
 
 - [Architecture Guide](ARCHITECTURE.md)
 - [Context Primer](CONTEXT.md)
-- [Product Requirements](docs/prd.md)
+- [Product Requirements (PRD)](docs/prd.md)
+- [Architecture Decision Records (ADRs)](docs/adr/)
+- [Concept Deep-Dives](docs/concepts/)
+- [Developer How-To Guides](docs/how-tos/)
+- [Operational Runbooks](docs/runbooks/)
 
 ---
 
 ## License
 
-MIT <!-- TODO: confirm license -->
+MIT
+

@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from evalbench.api.routers import health, runs
+from evalbench.api.routers import health, jobs, runs
 from evalbench.api.settings import Settings
 from evalbench.storage.postgres_store import PostgresResultStore
 
@@ -53,3 +53,4 @@ app.add_middleware(
 
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(runs.router, prefix="/api/v1")
+app.include_router(jobs.router, prefix="/api/v1")

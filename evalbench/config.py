@@ -1,15 +1,16 @@
-import yaml  # noqa: I001
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any
+
+import yaml
 from pydantic import BaseModel, Field
 
-from evalbench.schema import Dataset, TestCase
 from evalbench.engine import RunConfig
-from evalbench.providers.registry import get_provider
-from evalbench.providers.base import LLMProvider
 from evalbench.evaluators.base import Evaluator
+from evalbench.evaluators.registry import NEEDS_CUSTOM_CONFIG_BUILD, get_evaluator
+from evalbench.providers.base import LLMProvider
+from evalbench.providers.registry import get_provider
 from evalbench.retrieval.base import Retriever
-from evalbench.evaluators.registry import get_evaluator, NEEDS_CUSTOM_CONFIG_BUILD
+from evalbench.schema import Dataset, TestCase
 
 _JUDGE_BASED_EVALUATORS = {
     "llm_judge", "faithfulness", "answer_relevance", "context_precision", "context_recall"
@@ -35,11 +36,11 @@ class EvalRunConfig(BaseModel):
     system_prompt: str | None = None
     concurrency: int = 10
     evaluators: list[Any] = Field(default_factory=list)
-    retriever: Optional[RetrieverConfig] = None
+    retriever: RetrieverConfig | None = None
 
     def build(
-        self
-    ) -> tuple[Dataset, LLMProvider, list[Evaluator], RunConfig, Optional[Retriever]]:
+        self,
+    ) -> tuple[Dataset, LLMProvider, list[Evaluator], RunConfig, Retriever | None]:
         if isinstance(self.dataset, list):
             ds = Dataset(
                 name="inline",

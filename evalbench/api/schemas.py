@@ -75,3 +75,17 @@ class PaginatedResults(BaseModel):
     offset: int
     limit: int
     results: list[TestCaseResult]
+
+
+class JobCreate(BaseModel):
+    config: dict[str, Any] | None = None
+    config_path: str | None = None
+
+
+class JobStatusResponse(BaseModel):
+    job_id: str
+    status: str
+    run_id: str | None = None
+    error: str | None = None
+    config_path: str | None = None
+    message: str | None = None

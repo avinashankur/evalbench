@@ -1,9 +1,9 @@
-import json
 import asyncio
-from typing import Optional
+import json
 from pathlib import Path
-from evalbench.results import ResultStore
+
 from evalbench.engine import RunSummary
+from evalbench.results import ResultStore
 from evalbench.schema import TestCaseResult
 
 _SCHEMA_PATH = Path(__file__).parent / "schema.sql"
@@ -149,7 +149,7 @@ class PostgresResultStore(ResultStore):
         return d
 
     async def list_runs(self,
-                        dataset_name: Optional[str] = None,
+                        dataset_name: str | None = None,
                         limit: int = 50) -> list[dict]:
         assert self._pool is not None, "call connect() first"
         async with self._pool.acquire() as conn:
