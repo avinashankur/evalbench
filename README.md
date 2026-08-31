@@ -1,36 +1,134 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EvalBench Frontend
 
-## Getting Started
+> Modern web interface for the EvalBench AI evaluation and benchmarking platform.
 
-First, run the development server:
+[![Next.js](https://img.shields.io/badge/Next.js-16.3-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
+[![Better Auth](https://img.shields.io/badge/Better_Auth-v1.7-black)](https://better-auth.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+---
+
+## What is this?
+
+**EvalBench Frontend** is the user-facing web application for [EvalBench](https://github.com/your-org/evalbench), an AI evaluation and benchmarking engine. It gives AI engineers and researchers a unified interface to configure evaluation suites across multiple LLM providers, track running benchmarks with live progress updates, inspect granular per-test-case results, and compare performance across models and prompt versions.
+
+The application is built with **Next.js 16 (App Router)**, **React 19**, **Tailwind CSS v4**, **TanStack Query v5**, and **Better Auth**.
+
+---
+
+## Features
+
+- **🚀 Evaluation Run Management**: Configure and trigger single or multi-evaluator benchmarks with custom datasets, temperature settings, and model providers.
+- **⚡ Live Execution Polling**: Real-time progress tracking, live status polling, and immediate result visualization for active evaluation runs and distributed jobs.
+- **📊 Granular Test Case Inspection**: Drill down into individual prompt/response pairs, evaluator outputs, token usage, latency metrics, and failure diagnostics.
+- **⚖️ Side-by-Side Model Comparison**: Compare multiple evaluation runs simultaneously to evaluate tradeoffs across accuracy, latency, and cost.
+- **🔍 System & Provider Discovery**: View available LLM providers, registered evaluators, and backend API health from a centralized dashboard.
+- **🔐 Secure Authentication**: Integrated user registration, login, and session handling powered by Better Auth and PostgreSQL.
+- **🌓 Dark / Light Mode**: Built-in theme toggling with persistent user preference.
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- **Node.js**: `v20.x LTS` or newer
+- **PostgreSQL**: Running instance for Better Auth session storage (e.g. Neon, AWS RDS, or local Docker)
+- **EvalBench Backend**: Running instance of the EvalBench FastAPI service (default: `http://localhost:8000`)
+
+### Installation & Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-org/evalbench-frontend.git
+   cd evalbench-frontend
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables:**
+   Create a `.env` file in the root directory:
+   ```env
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   DATABASE_URL=postgresql://user:password@localhost:5432/evalbench_auth
+   BETTER_AUTH_SECRET=your_32_character_or_longer_secret_here
+   ```
+
+4. **Run database migrations for Better Auth:**
+   ```bash
+   npx @better-auth/cli migrate
+   ```
+
+5. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## Configuration
+
+| Variable | Required | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `NEXT_PUBLIC_API_BASE_URL` | Yes | `http://localhost:8000` | URL of the EvalBench FastAPI backend service |
+| `NEXT_PUBLIC_APP_URL` | Yes | `http://localhost:3000` | Canonical frontend application URL |
+| `DATABASE_URL` | Yes | — | PostgreSQL connection string for Better Auth |
+| `BETTER_AUTH_SECRET` | Yes | — | 32+ character random secret for signing session cookies |
+
+---
+
+## Scripts
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev        # Starts development server on http://localhost:3000
+npm run build      # Creates production build
+npm run start      # Runs production server
+npm run lint       # Runs ESLint checks
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/                  # Next.js App Router (auth route groups & dashboard pages)
+├── components/layout/    # App shell, navigation sidebar, and header
+├── config/               # Site configuration and navigation metadata
+├── env.ts                # Runtime type-safe env validation (t3-env)
+├── lib/
+│   ├── api/              # Centralized apiClient, baseApi, error parsers
+│   ├── auth.ts           # Better Auth server configuration
+│   └── auth-client.ts    # Better Auth client library
+├── modules/
+│   ├── runs/             # Run creation, details, results, and query hooks
+│   ├── jobs/             # Distributed jobs management and tracking
+│   └── discovery/        # Model provider, evaluator, and health discovery
+└── providers/            # AppProvider wrapping QueryClient, Theme, Sonner
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Documentation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — System design, C4 context/containers, and data flow
+- [CONTEXT.md](./CONTEXT.md) — Agent and developer mental model, conventions, and invariants
+- [Subsystem Architecture](./docs/architecture/) — Project-specific architecture deep-dives
+- [Product Requirements](./docs/prd.md) — User personas, value proposition, and feature scope
+- [Architecture Decisions (ADRs)](./docs/adr/) — Record of architectural decisions and trade-offs
+- [Concepts](./docs/concepts/) — Universal algorithms, scoring theory, and math models
+- [Runbooks](./docs/runbooks/) — Operational guides and troubleshooting steps
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT © EvalBench Team

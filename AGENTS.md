@@ -7,3 +7,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+# Proactive Issue Tracking
+
+On every prompt, actively check if the conversation or codebase reveals a potential bug, unhandled error, tech debt, or deferred feature. If detected, proactively offer to file a GitHub issue using the `issue-tracker-gh` skill.
+
+# General
+- If making an API call to the backend, make sure to read @docs/architecture/001-api-client-usage.md
