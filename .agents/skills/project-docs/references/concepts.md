@@ -2,26 +2,33 @@
 
 ## Purpose
 
-A concept doc explains a non-obvious idea, algorithm, mathematical foundation, or design pattern used in the codebase. It is the textbook page behind the implementation — written for engineers who need to understand _why_ the code does what it does at a deeper level than code comments can convey.
+A concept doc explains a non-obvious idea, algorithm, mathematical foundation, or theoretical design pattern. It is the textbook page behind the implementation — written for engineers who need to understand the underlying theory at a deeper level than code comments can convey.
 
-Concept docs must be **portable**. They should not contain project-specific configuration, feature names, or business logic. If the underlying code is copied to another repo, the concept doc should travel with it unchanged.
+Concept docs must be **universally true and portable**:
+- They describe concepts that may or may not be directly tied to this project, but are transferable across systems.
+- They should not contain project-specific configuration, file paths, private feature names, or business logic.
+- If the underlying concept is studied in another repo or tech stack, the concept doc should apply unchanged.
+
+> 💡 **Project-Specific vs. Universal Distinction:**
+> - If the concept explains **how this specific project works** (e.g. its component pipelines, auth lifecycle, module interactions), write it in **`docs/architecture/`** instead.
+> - If the concept is **universally true and transferable** (e.g. bloom filter math, rate limiting algorithms, vector similarity distance metrics), write it in **`docs/concepts/`**.
 
 ## When to write one
 
-Write a concept doc when:
+Write a concept doc in `docs/concepts/` when:
 
 - An algorithm or data structure in the codebase is non-trivial (bloom filters, consistent hashing, rate limiting strategies, custom encoding schemes)
 - The math behind a feature needs explanation (scoring functions, statistical models, optimization problems)
-- A design pattern is used in a non-standard way that would confuse a reader
-- A concept spans multiple modules and there's no single place in the code to explain it
+- A mathematical or theoretical design pattern is used that warrants conceptual explanation
 - A new engineer would need to read a paper, blog post, or textbook chapter before modifying the related code
 
 Do NOT write a concept doc for:
 
-- Project-specific business logic (use an ADR or inline docs instead)
+- Project-specific architecture or subsystem mechanics (use `docs/architecture/` instead)
+- Project-specific business logic (use an ADR, `docs/architecture/`, or inline docs instead)
 - Trivially Googleable concepts (don't write a concept doc for "what is a hash map")
 - Explanations short enough for a code comment or README section
-- Decisions (use an ADR) or procedures (use a how-to or runbook)
+- Decisions (use `docs/adr/`) or procedures (use `docs/how-tos/` or `docs/runbooks/`)
 
 ## File naming convention
 

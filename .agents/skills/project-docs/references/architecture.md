@@ -6,37 +6,37 @@ Architecture documentation explains how the system is structured — the big pic
 
 ## File Placement Strategy
 
-### Root `ARCHITECTURE.md`
+### 1. Root `ARCHITECTURE.md` (System-Wide Overview)
 
-- Lives at the repository root
-- Describes the current state of the entire system — the big picture
+- Lives at the repository root (`ARCHITECTURE.md`)
+- Describes the current state of the entire system — the big picture (C4 Level 1 & Level 2)
 - A new engineer reads this first before touching any code
-- Answers: What components exist? How do they talk to each other? Why are they structured this way?
-- Always reflects the current state, not aspirational/future state
-- Must be updated whenever the system structure changes
+- Answers: What containers/services exist? How do they talk to each other? What is the overarching data flow?
+- Always reflects current state, not aspirational future state
+- Must be updated whenever system boundaries or dependencies change
 
-### Per-module `ARCHITECTURE.md` (optional)
+### 2. `docs/architecture/` (Project-Specific Architectural Concepts & Subsystems)
 
-- Lives inside a module/package directory (e.g., `packages/auth/ARCHITECTURE.md`, `services/billing/ARCHITECTURE.md`)
-- Describes that module's internal structure only — its layers, patterns, data flow, and key classes
-- Only create one when a module is complex enough that its internal architecture is non-obvious from the code
-- Must cross-reference the root ARCHITECTURE.md ("This module sits in the [Auth layer] of the root architecture")
+- Lives in `docs/architecture/` (e.g., `docs/architecture/001-api-client-pipeline.md`, `docs/architecture/002-auth-session-flow.md`)
+- Contains deep-dives into **project-specific** subsystems, component lifecycles, state pipelines, and internal mechanics
+- Explains how this particular codebase and project work in detail (C4 Level 3 & Level 4)
+- **Key distinction:** `docs/architecture/` is **project-specific** (tied directly to this repo's implementation), whereas `docs/concepts/` is for **universal, transferable concepts** (portable theory/math/algorithms).
+
+### 3. Per-module `ARCHITECTURE.md` (Optional for Monorepos)
+
+- Lives inside a specific package directory (e.g., `packages/auth/ARCHITECTURE.md`, `services/billing/ARCHITECTURE.md`)
+- Describes that module's internal structure only — its layers, patterns, and boundaries
+- Only create one when a module is complex enough (>3 internal layers or >10 files) that its internal structure is non-obvious
+- Must cross-reference the root `ARCHITECTURE.md`
 
 ### When to use which
 
-| Situation                                    | File                                              |
-| -------------------------------------------- | ------------------------------------------------- |
-| New project, single service                  | Root ARCHITECTURE.md only                         |
-| Monorepo with multiple packages              | Root + one per complex package                    |
-| Microservices                                | Root (showing service topology) + one per service |
-| A module has >3 internal layers or >10 files | Consider a per-module ARCHITECTURE.md             |
-| A module is a thin wrapper or CRUD           | Skip — root doc is sufficient                     |
-
-### Cross-referencing
-
-- Root doc should list all modules and link to their per-module architecture docs if they exist
-- Per-module docs should link back to the root and reference their position in the system context
-- Keep the root doc as the single source of truth for inter-module communication and system boundaries
+| Goal / Topic | Destination |
+| :--- | :--- |
+| System-wide overview, containers, external integrations | Root `ARCHITECTURE.md` |
+| Project-specific subsystem deep-dive (e.g. auth lifecycle, polling engine) | `docs/architecture/00N-*.md` |
+| Universal, portable concept (e.g. bloom filters, rate-limiting theory) | `docs/concepts/00N-*.md` |
+| Isolated sub-package architecture in a monorepo | `packages/<pkg>/ARCHITECTURE.md` |
 
 ## Standard: The C4 Model
 
@@ -197,9 +197,52 @@ graph LR
 
 ## Related Documents
 
-- [ADR Index](./decisions/)
+- [ADR Index](./docs/adr/)
 - [Deployment Guide](./deployment.md)
 - [Runbook](./runbook.md)
+
+---
+
+## Subsystem Architecture Template (`docs/architecture/00N-*.md`)
+
+Use this template when writing a deep-dive on a project-specific module, engine, pipeline, or subsystem:
+
+```markdown
+# [NNN] — [Subsystem / Feature Architecture Name]
+
+> **Scope:** [Project Module / Subsystem, e.g. "runs module", "apiClient interceptor pipeline", "Better Auth integration"]
+> **Last updated:** YYYY-MM-DD
+> **Status:** Current / Draft / Deprecated
+
+## Overview
+
+[2–3 sentences explaining what this subsystem does within this specific project, what components it interacts with, and its primary responsibilities.]
+
+## Internal Component Design (C4 Level 3)
+
+[Mermaid diagram and description of internal classes, hooks, services, repositories, or functions.]
+
+`mermaid
+graph TD
+  ComponentA --> ComponentB
+  ComponentB --> ComponentC
+`
+
+## Execution & State Lifecycle
+
+[Step-by-step lifecycle flow, sequence diagram, or state machine explaining how data passes through this specific subsystem.]
+
+## Project Invariants & Interfaces
+
+- [Strict rules or TypeScript interfaces that this subsystem adheres to]
+- [Exported contracts and consuming modules]
+
+## Related Documents
+
+- [Root System Architecture](../../ARCHITECTURE.md)
+- [Project Context](../../CONTEXT.md)
+- [Related ADRs](../adr/)
+```
 
 ---
 
@@ -207,8 +250,9 @@ graph LR
 
 Before finishing:
 
-- [ ] Context diagram shows all external actors and systems
-- [ ] Container diagram shows every deployable unit
+- [ ] Context diagram shows all external actors and systems (for root doc)
+- [ ] Container diagram shows every deployable unit (for root doc)
+- [ ] Subsystem docs in `docs/architecture/` explain project-specific mechanics in detail
 - [ ] Communication protocols are labeled on all diagram edges
 - [ ] Tech stack is listed (language, framework, version)
 - [ ] Key architectural decisions link to ADRs or have brief rationale

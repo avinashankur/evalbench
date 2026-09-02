@@ -42,11 +42,11 @@ ARCHITECTURE.md          # Root architecture doc (use template from references/a
 CONTEXT.md               # Root context doc (use template from references/context-md.md)
 README.md                # Root readme (use template from references/readme.md)
 docs/
+├── architecture/        # Project-specific architecture docs & subsystem deep-dives
+│   └── .gitkeep
 ├── adr/                 # Architecture Decision Records
 │   └── .gitkeep
-├── assets/              # Images, diagrams, screenshots referenced by markdown files
-│   └── .gitkeep
-├── concepts/            # Deep-dives, math, and explanations
+├── concepts/            # Universal & portable deep-dives, math, and explanations
 │   └── .gitkeep
 ├── runbooks/            # Incident & troubleshooting playbooks (local dev first, production second)
 │   └── .gitkeep
@@ -73,24 +73,24 @@ This mode runs when the skill is invoked with no arguments in a repo that alread
 
 #### 1. Existence checks
 
-| File/Folder       | Required    | Expected location |
-| ----------------- | ----------- | ----------------- |
-| `ARCHITECTURE.md` | Yes         | Repo root         |
-| `CONTEXT.md`      | Yes         | Repo root         |
-| `README.md`       | Yes         | Repo root         |
-| `docs/adr/`       | Yes         | `docs/adr/`       |
-| `docs/assets/`    | Recommended | `docs/assets/`    |
-| `docs/concepts/`  | Yes         | `docs/concepts/`  |
-| `docs/runbooks/`  | Yes         | `docs/runbooks/`  |
-| `docs/prd.md`     | Recommended | `docs/prd.md`     |
+| File/Folder          | Required    | Expected location    |
+| -------------------- | ----------- | -------------------- |
+| `ARCHITECTURE.md`    | Yes         | Repo root            |
+| `CONTEXT.md`         | Yes         | Repo root            |
+| `README.md`          | Yes         | Repo root            |
+| `docs/architecture/` | Yes         | `docs/architecture/` |
+| `docs/adr/`          | Yes         | `docs/adr/`          |
+| `docs/concepts/`     | Yes         | `docs/concepts/`     |
+| `docs/runbooks/`     | Yes         | `docs/runbooks/`     |
+| `docs/prd.md`        | Recommended | `docs/prd.md`        |
 
 #### 2. Placement checks
 
+- Is ARCHITECTURE.md at the repo root? (System overview belongs at the root, not inside `docs/`)
+- Are project-specific architecture docs and subsystem deep-dives inside `docs/architecture/`? Flag any found elsewhere
 - Are all ADRs inside `docs/adr/`? Flag any ADRs found elsewhere
-- Are all runbooks inside `docs/runbooks/`? Flag any found elsewhere
-- Are all concept docs inside `docs/concepts/`? Flag any found elsewhere
+- Are all universal, portable concept docs inside `docs/concepts/`? Flag any found elsewhere (and flag project-specific docs misplaced in `concepts/`)
 - Are how-to guides inside `docs/how-tos/` (if the folder exists)? Flag any found elsewhere
-- Is ARCHITECTURE.md at the repo root? If it's inside `docs/`, flag it — it belongs at the root
 - Is CONTEXT.md at the repo root? If it's inside `docs/`, flag it — it belongs at the root
 - Are there per-module ARCHITECTURE.md files? If so, do they cross-reference the root?
 
@@ -251,17 +251,26 @@ This mode runs when the user invokes the skill with a doc type but no further pr
 4. Cross-reference against existing ADRs — don't recommend what's already documented
 5. Recommend the next 1–3 ADRs, with proposed titles following the numbering sequence
 
+#### Project Architecture Deep-Dives (`/project-docs architecture`)
+
+1. Read `ARCHITECTURE.md` and all files in `docs/architecture/`
+2. Identify project-specific subsystems, pipelines, modules, or state machines that lack detailed structural documentation:
+   - Complex component or service lifecycles (e.g. auth flows, polling engines, data synchronization pipelines)
+   - Cross-cutting concerns specific to this project (e.g. custom error pipelines, multi-layer API architectures)
+   - Interactions between frontend modules and backend services
+3. Recommend the next 1–3 project-specific architecture docs to write for `docs/architecture/` (e.g. `001-*.md`).
+
 #### Concepts (`/project-docs concepts`)
 
 1. Read all files in `docs/concepts/`
 2. Identify the current numbering sequence
-3. Scan the codebase for non-trivial algorithms, data structures, patterns, or math:
-   - Custom implementations that aren't standard library usage
-   - Complex logic with explanatory comments that could be a full doc
-   - Code that references papers, blog posts, or external algorithms
+3. Scan the codebase for non-trivial, universally true algorithms, data structures, or math:
+   - Theoretical algorithms or scoring functions (e.g. statistical calibration, vector math, token bucket algorithms)
+   - Custom mathematical models that are portable and transferable across projects
+   - Code that references academic papers, blog posts, or generic computer science algorithms
 4. Check dependency order — if a foundational concept is missing but a dependent one exists, recommend the foundational one first
-5. Verify portability — if an existing concept doc contains project-specific details, flag it for cleanup
-6. Recommend the next 1–3 concept docs, respecting dependency ordering
+5. Verify portability — if an existing concept doc contains project-specific details, flag that it belongs in `docs/architecture/` instead
+6. Recommend the next 1–3 universal concept docs, respecting dependency ordering
 
 #### Runbooks (`/project-docs runbook`)
 
@@ -372,13 +381,13 @@ Each type has its own reference file with a detailed template and checklist. Rea
 | Category  | Doc Type                            | Reference File             |
 | --------- | ----------------------------------- | -------------------------- |
 | Technical | API Documentation                   | references/api-docs.md     |
-| Technical | Architecture Documentation (C4)     | references/architecture.md |
+| Technical | Architecture & Subsystems (C4)      | references/architecture.md |
 | Technical | ADR — Architecture Decision Record  | references/adr.md          |
 | Technical | README                              | references/readme.md       |
 | Technical | Deployment / Infrastructure Docs    | references/deployment.md   |
 | Technical | Runbook / Playbook                  | references/runbook.md      |
 | Technical | How-To Guide                        | references/how-tos.md      |
-| Technical | Concept Deep-Dive                   | references/concepts.md     |
+| Technical | Concept Deep-Dive (Universal)       | references/concepts.md     |
 | Technical | CONTEXT.md                          | references/context-md.md   |
 | Technical | PRODUCT.md                          | references/product-md.md   |
 | Product   | Product Documentation (user-facing) | references/product-docs.md |
@@ -393,19 +402,21 @@ This is the standard docs layout this skill enforces. Use this as the source of 
 
 ```
 <repo-root>/
-├── ARCHITECTURE.md        # System architecture — current state, big picture
+├── ARCHITECTURE.md        # System architecture — current state, big picture (C4 Level 1 & 2)
 ├── CONTEXT.md             # AI/agent context primer — glossary, patterns, invariants
 ├── README.md              # Front door — what is this, how to run it
 │
-├── packages/foo/          # (optional) Per-module architecture docs
+├── packages/foo/          # (optional) Per-module architecture docs in monorepos
 │   └── ARCHITECTURE.md    # Internal structure of this module only
 │
 └── docs/
+    ├── architecture/      # Project-specific architecture docs & subsystem deep-dives (C4 Level 3 & 4)
+    │   ├── 001-api-client-pipeline.md
+    │   └── 002-auth-session-flow.md
     ├── adr/               # Architecture Decision Records (immutable, history of WHY)
     │   ├── 001-use-postgresql.md
     │   └── 002-monorepo-over-polyrepo.md
-    ├── assets/            # Images, diagrams, screenshots referenced by markdown files
-    ├── concepts/          # Deep-dives, math, and explanations (portable, not project-specific)
+    ├── concepts/          # Universally true, portable deep-dives, math, and algorithms (not project-specific)
     │   ├── 001-bloom-filter-sizing.md
     │   └── 002-consistent-hashing.md
     ├── how-tos/           # Actionable dev guides (created on demand, not during scaffold)
