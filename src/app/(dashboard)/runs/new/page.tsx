@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useCreateRun } from '@/modules/runs'
 import { useProviders, useEvaluators } from '@/modules/discovery'
 import type { RunCreate } from '@/modules/runs'
@@ -84,11 +85,10 @@ export default function NewRunPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Model Name</label>
-              <input
+              <Input
                 type="text"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
                 placeholder="gpt-4o"
                 required
               />
@@ -99,11 +99,10 @@ export default function NewRunPage() {
         {/* Dataset */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Dataset Path</label>
-          <input
+          <Input
             type="text"
             value={dataset}
             onChange={(e) => setDataset(e.target.value)}
-            className="w-full rounded-md border bg-background px-3 py-2 text-sm"
             placeholder="path/to/dataset.jsonl"
             required
           />
@@ -115,11 +114,11 @@ export default function NewRunPage() {
         {/* Prompt */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Prompt Template</label>
-          <input
+          <Input
             type="text"
             value={promptTemplate}
             onChange={(e) => setPromptTemplate(e.target.value)}
-            className="w-full rounded-md border bg-background px-3 py-2 text-sm font-mono"
+            className="font-mono"
             placeholder="{question}"
           />
         </div>
@@ -129,7 +128,7 @@ export default function NewRunPage() {
           <textarea
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
-            className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 outline-none"
             rows={3}
             placeholder="You are a helpful assistant."
           />
@@ -138,11 +137,11 @@ export default function NewRunPage() {
         {/* Concurrency */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Concurrency</label>
-          <input
+          <Input
             type="number"
             value={concurrency}
             onChange={(e) => setConcurrency(Number(e.target.value))}
-            className="w-24 rounded-md border bg-background px-3 py-2 text-sm"
+            className="w-24"
             min={1}
             max={100}
           />

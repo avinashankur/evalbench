@@ -3,6 +3,15 @@
 import { useState } from 'react'
 import { useListRuns } from '@/modules/runs'
 import type { RunSummary } from '@/modules/runs'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 export default function ComparePage() {
   const { data, isLoading } = useListRuns()
@@ -31,92 +40,96 @@ export default function ComparePage() {
       </div>
 
       {/* Run selector */}
-      <div className="rounded-lg border bg-card p-6">
-        <h2 className="mb-3 font-semibold">Select Runs</h2>
-        {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
-        ) : (
-          <div className="max-h-60 space-y-1 overflow-y-auto">
-            {data?.runs.map((run) => (
-              <label
-                key={run.run_id}
-                className="flex cursor-pointer items-center gap-3 rounded-md p-2 hover:bg-muted/50"
-              >
-                <input
-                  type="checkbox"
-                  checked={selected.includes(run.run_id)}
-                  onChange={() => toggleRun(run.run_id)}
-                  className="rounded border"
-                />
-                <span className="text-sm">
-                  {run.dataset_name} — {run.provider}/{run.model}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {new Date(run.created_at).toLocaleDateString()}
-                </span>
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Select Runs</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          ) : (
+            <div className="max-h-60 space-y-1 overflow-y-auto">
+              {data?.runs.map((run) => (
+                <label
+                  key={run.run_id}
+                  className="flex cursor-pointer items-center gap-3 rounded-md p-2 hover:bg-muted/50"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(run.run_id)}
+                    onChange={() => toggleRun(run.run_id)}
+                    className="rounded border"
+                  />
+                  <span className="text-sm">
+                    {run.dataset_name} — {run.provider}/{run.model}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(run.created_at).toLocaleDateString()}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Comparison table */}
       {selectedRuns.length >= 2 && (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left font-medium">Metric</th>
+        <div className="overflow-hidden rounded-lg border border-border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="px-4 py-3 text-left font-medium">Metric</TableHead>
                 {selectedRuns.map((r) => (
-                  <th key={r.run_id} className="px-4 py-3 text-right font-medium">
+                  <TableHead key={r.run_id} className="px-4 py-3 text-right font-medium">
                     {r.dataset_name}
                     <br />
                     <span className="font-normal text-muted-foreground">
                       {r.provider}/{r.model}
                     </span>
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b">
-                <td className="px-4 py-3 font-medium">Test Cases</td>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="px-4 py-3 font-medium">Test Cases</TableCell>
                 {selectedRuns.map((r) => (
-                  <td key={r.run_id} className="px-4 py-3 text-right font-mono">
+                  <TableCell key={r.run_id} className="px-4 py-3 text-right font-mono">
                     {r.total_test_cases}
-                  </td>
+                  </TableCell>
                 ))}
-              </tr>
-              <tr className="border-b">
-                <td className="px-4 py-3 font-medium">Avg Latency</td>
+              </TableRow>
+              <TableRow>
+                <TableCell className="px-4 py-3 font-medium">Avg Latency</TableCell>
                 {selectedRuns.map((r) => (
-                  <td key={r.run_id} className="px-4 py-3 text-right font-mono">
+                  <TableCell key={r.run_id} className="px-4 py-3 text-right font-mono">
                     {r.metrics.mean_latency_ms.toFixed(0)}ms
-                  </td>
+                  </TableCell>
                 ))}
-              </tr>
-              <tr className="border-b">
-                <td className="px-4 py-3 font-medium">Total Cost</td>
+              </TableRow>
+              <TableRow>
+                <TableCell className="px-4 py-3 font-medium">Total Cost</TableCell>
                 {selectedRuns.map((r) => (
-                  <td key={r.run_id} className="px-4 py-3 text-right font-mono">
+                  <TableCell key={r.run_id} className="px-4 py-3 text-right font-mono">
                     ${r.metrics.total_cost_usd.toFixed(4)}
-                  </td>
+                  </TableCell>
                 ))}
-              </tr>
+              </TableRow>
               {allEvaluatorNames.map((name) => (
-                <tr key={name} className="border-b">
-                  <td className="px-4 py-3 font-medium">{name} (pass rate)</td>
+                <TableRow key={name}>
+                  <TableCell className="px-4 py-3 font-medium">{name} (pass rate)</TableCell>
                   {selectedRuns.map((r) => (
-                    <td key={r.run_id} className="px-4 py-3 text-right font-mono">
+                    <TableCell key={r.run_id} className="px-4 py-3 text-right font-mono">
                       {r.metrics.pass_rates[name] != null
                         ? `${(r.metrics.pass_rates[name] * 100).toFixed(1)}%`
                         : '—'}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
 

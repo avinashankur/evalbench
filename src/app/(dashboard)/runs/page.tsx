@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Plus, Trash2 } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useListRuns, useDeleteRun } from '@/modules/runs'
 
 export default function RunsPage() {
@@ -30,12 +31,12 @@ export default function RunsPage() {
       </div>
 
       <div>
-        <input
+        <Input
           type="text"
           placeholder="Filter by dataset name…"
           value={datasetFilter}
           onChange={(e) => setDatasetFilter(e.target.value)}
-          className="w-full max-w-sm rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+          className="max-w-sm"
         />
       </div>
 

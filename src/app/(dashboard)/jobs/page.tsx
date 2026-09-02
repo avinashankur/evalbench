@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useCreateJob, useGetJob } from '@/modules/jobs'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { RefreshCw, CheckCircle2, XCircle, Clock } from 'lucide-react'
 
 export default function JobsPage() {
@@ -40,11 +41,10 @@ export default function JobsPage() {
         <h2 className="font-semibold">Submit Job</h2>
         <div className="space-y-2">
           <label className="text-sm font-medium">Config Path</label>
-          <input
+          <Input
             type="text"
             value={configPath}
             onChange={(e) => setConfigPath(e.target.value)}
-            className="w-full rounded-md border bg-background px-3 py-2 text-sm"
             placeholder="configs/mmlu.yaml"
             required
           />
@@ -64,11 +64,10 @@ export default function JobsPage() {
       <div className="rounded-lg border bg-card p-6">
         <h2 className="mb-4 font-semibold">Track Job</h2>
         <div className="mb-4 flex gap-2">
-          <input
+          <Input
             type="text"
             value={trackingJobId}
             onChange={(e) => setTrackingJobId(e.target.value)}
-            className="flex-1 rounded-md border bg-background px-3 py-2 text-sm"
             placeholder="Paste a job ID to track…"
           />
         </div>
