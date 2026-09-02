@@ -35,7 +35,7 @@ export function Footer({ className }: FooterProps) {
           Docs
         </Link>
         <a
-          href="https://github.com/your-org/evalbench"
+          href="https://github.com/avinashankur/evalbench"
           target="_blank"
           rel="noopener noreferrer"
           className="transition-colors hover:text-foreground"

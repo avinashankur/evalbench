@@ -1,12 +1,18 @@
+'use client'
+
 import Link from 'next/link'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { authClient } from '@/lib/auth-client'
 
 interface CtaStripProps {
   className?: string
 }
 
 export function CtaStrip({ className }: CtaStripProps) {
+  const { data: session } = authClient.useSession()
+  const ctaHref = session?.user ? '/dashboard' : '/signup'
+
   return (
     <section className={cn('mx-auto mb-20 max-w-6xl px-6 sm:px-8', className)}>
       <div className="relative flex flex-col items-start justify-between gap-6 overflow-hidden rounded-md bg-neutral-900 px-8 py-12 text-white sm:flex-row sm:items-center sm:px-12 sm:py-14 dark:bg-card dark:text-card-foreground dark:border dark:border-border">
@@ -23,13 +29,13 @@ export function CtaStrip({ className }: CtaStripProps) {
 
         {/* CTA Button */}
         <Link
-          href="/signup"
+          href={ctaHref}
           className={cn(
             buttonVariants({ size: 'lg' }),
             'relative z-10 bg-white text-neutral-900 hover:bg-white/90 dark:bg-primary dark:text-primary-foreground'
           )}
         >
-          Get started free
+          {session?.user ? 'Go to dashboard' : 'Get started free'}
         </Link>
       </div>
     </section>

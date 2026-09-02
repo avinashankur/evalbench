@@ -1,14 +1,19 @@
+'use client'
+
 import Link from 'next/link'
 import { PulseDot } from '@/components/landing/pulse-dot'
 import { Scoreboard } from '@/components/landing/scoreboard'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { authClient } from '@/lib/auth-client'
 
 interface HeroProps {
   className?: string
 }
 
 export function Hero({ className }: HeroProps) {
+  const { data: session } = authClient.useSession()
+  const evalHref = session?.user ? '/runs/new' : '/signup'
   return (
     <section
       className={cn('relative mx-auto max-w-6xl px-6 pt-16 pb-14 sm:px-8 sm:pt-20', className)}
@@ -54,7 +59,7 @@ export function Hero({ className }: HeroProps) {
         {/* Actions */}
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link
-            href="/signup"
+            href={evalHref}
             className={cn(buttonVariants({ variant: 'default', size: 'lg' }))}
           >
             Run your first eval
