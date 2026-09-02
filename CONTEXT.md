@@ -35,10 +35,10 @@ EvalBench Frontend is the web interface for the EvalBench AI evaluation and benc
 ```
 src/
 ├── app/
-│   ├── (auth)/                     - Unauthenticated auth pages (card layout)
-│   │   ├── layout.tsx              - Centered auth card layout
-│   │   ├── login/page.tsx          - Email & password sign-in (using shadcn Button)
-│   │   └── signup/page.tsx         - New user registration (using shadcn Button)
+│   ├── (auth)/                     - Split-screen studio workbench auth pages
+│   │   ├── layout.tsx              - Split-screen auth layout
+│   │   ├── login/page.tsx          - Live terminal stream + sign-in form
+│   │   └── signup/page.tsx         - Minimalist editorial + sign-up form
 │   ├── (dashboard)/                - Authenticated dashboard application
 │   │   ├── layout.tsx              - App shell (Sidebar + Header + Main container)
 │   │   ├── dashboard/page.tsx      - Overview: health, recent runs, quick launch
@@ -55,12 +55,13 @@ src/
 │   └── globals.css                 - Global styles, Tailwind v4 @theme, and shadcn tokens
 ├── components/
 │   ├── common/                     - Shared visual primitives (TicksDivider)
-│   ├── landing/                    - Marketing landing components (Hero, Scoreboard, etc.)
+│   ├── form/                       - Type-safe form system (Form, FormField, SubmitButton)
+│   ├── landing/                    - Marketing landing components (Hero, Scoreboard, Station HUD Header)
 │   ├── layout/                     - Shell layout components
 │   │   ├── sidebar.tsx             - Nav links, current route highlight, collapse
 │   │   ├── header.tsx              - Top bar with theme toggle & user profile/logout
 │   │   └── dashboard-layout.tsx    - Composed layout wrapper
-│   ├── ui/                         - shadcn UI primitives (Button, Table)
+│   ├── ui/                         - shadcn UI primitives (Avatar, Button, Card, DropdownMenu, Input, Table)
 │   └── mode-toggle.tsx             - Theme switcher component
 ├── config/
 │   └── site.ts                     - App metadata, navigation links, branding
@@ -75,7 +76,7 @@ src/
 │   ├── auth.ts                     - Better Auth server configuration with PG pool
 │   ├── auth-client.ts              - Better Auth client helper for React components
 │   └── utils.ts                    - `cn()` helper (clsx + tailwind-merge)
-├── middleware.ts                   - Next.js route guard inspecting session cookies
+├── proxy.ts                        - Next.js 16 route guard & proxy inspecting session cookies
 ├── modules/                        - Domain feature modules (3-layer architecture)
 │   ├── runs/                       - Runs domain (types, API functions, hooks)
 │   ├── jobs/                       - Distributed jobs domain
@@ -136,7 +137,7 @@ refetchInterval: (query) => {
 
 ### 4. Auth & Route Protection
 - Client authentication state is accessed via `authClient.useSession()`.
-- Unauthenticated requests to `(dashboard)` routes are redirected by `middleware.ts` based on session cookies.
+- Unauthenticated requests to `(dashboard)` routes and authenticated requests to `(auth)` routes are intercepted and redirected by `src/proxy.ts` based on session cookies (`better-auth.session_token`).
 - Server-side Better Auth handles password hashing, verification, and session token generation via PostgreSQL.
 
 ---

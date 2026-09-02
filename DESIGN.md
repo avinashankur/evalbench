@@ -1,11 +1,11 @@
 # EvalBench — AI Agent Evaluation & Regression Platform
 
-**Status:** Draft  
+**Status:** Approved  
 **Document type:** Design Document  
-**Scope:** Product / UX / Frontend / System Design  
-**Source:** Supplied EvalBench HTML/CSS/JavaScript prototype  
+**Scope:** Product / UX / Frontend / System Design / Component Architecture  
+**Source:** Supplied EvalBench HTML/CSS/JavaScript prototype & Next.js Implementation  
 
-> This document describes the design represented by the supplied EvalBench prototype and separates source-defined behavior from proposed production architecture. Backend, persistence, authentication, API contracts, and evaluation execution are not implemented in the source.
+> This document describes the design, user experience, theming, and technical architecture of the EvalBench platform. It incorporates all system guidelines, design token specifications, Shadcn component standards, and authentication flows.
 
 ---
 
@@ -13,18 +13,19 @@
 
 EvalBench is an AI-agent evaluation and regression-monitoring product. Its central workflow is to evaluate an agent version against a test suite, measure the resulting performance, and compare it with a baseline.
 
-The prototype centers the product around three explicit dimensions:
+The platform centers the product around three explicit dimensions:
 
 1. **Accuracy**
 2. **Cost**
 3. **Latency**
 
-The product's core interaction is a baseline-versus-candidate comparison. A user should be able to determine whether an agent change improved the score, introduced a regression, increased cost, or affected latency before shipping that version.
+The product's core interaction is a baseline-versus-candidate comparison. A user can determine whether an agent change improved the score, introduced a regression, increased cost, or affected latency before shipping that version.
 
-The supplied prototype contains two primary surfaces:
+The platform consists of three primary user surfaces:
 
-- A public landing page communicating the product proposition.
-- An internal dashboard showing evaluation runs, aggregate statistics, a score trend, filters, and a run-detail drawer.
+- **Public Landing Page**: Communicates the product value proposition, multi-dimensional tracking, and live scoreboard demonstration.
+- **Authentication Workbench (Login & Sign Up)**: Cardless split-screen studio workbench with live evaluation telemetry and distraction-free forms.
+- **Operational Dashboard**: Provides run management, distributed job tracking, multi-run comparison matrix, and granular test-case drilldowns.
 
 ---
 
@@ -32,1316 +33,223 @@ The supplied prototype contains two primary surfaces:
 
 Agent behavior changes when prompts, models, retrieval systems, tools, or orchestration logic change. Looking only at a single aggregate score does not provide enough information to understand whether a new version is actually better.
 
-The EvalBench interface therefore presents evaluation results comparatively.
+The EvalBench interface presents evaluation results comparatively:
 
-The landing-page message is explicitly centered on measuring each agent change against the previous one. The dashboard extends that idea into a run history where each run contains a score, baseline delta, pass rate, cost, p95 latency, and status.
-
-The source demonstrates this through examples such as:
-
-- `support-agent v4.1` as a baseline
-- `support-agent v4.2` as a candidate
-- `+1.8 pts` score improvement
-- a corresponding cost increase from `$0.038` to `$0.049`
-- p95 latency changing from `1.1s` to `1.0s`
-
-This makes tradeoffs visible rather than reducing evaluation to a single number.
+- The landing-page message is explicitly centered on measuring each agent change against the last one.
+- The dashboard extends that idea into a run history where each run contains a score, baseline delta, pass rate, cost, p95 latency, and status.
+- Example tradeoff: `support-agent v4.2` achieves a `+1.8 pts` score improvement and `1.0s` p95 latency (down from `1.1s`), but incurs a cost increase from `$0.038` to `$0.049`.
 
 ---
 
-## 3. Problem Statement
+## 3. Design System & Frontend Architecture Standards
 
-The system needs to answer a practical engineering question:
+### 3.1 Shadcn Component Standards
+To maintain codebase consistency, accessibility, and maintainability, **custom components must not be invented from scratch** when standard Shadcn components exist:
+- **Buttons**: All buttons and action links must use `Button` or `buttonVariants` from `@/components/ui/button`.
+- **Inputs**: All text, email, password, search, and number inputs must use `Input` from `@/components/ui/input`.
+- **Tables**: All data grids and tables must use `Table`, `TableHeader`, `TableBody`, `TableHead`, `TableRow`, and `TableCell` from `@/components/ui/table`.
+- **Cards & Panels**: When structured bounding boxes are required (e.g., dashboard widgets, compare matrix), use `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, and `CardFooter` from `@/components/ui/card`.
+- **Dropdowns & Menus**: All action menus, user profiles, and popover actions must use `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuLabel`, and `DropdownMenuSeparator` from `@/components/ui/dropdown-menu`.
+- **Avatars**: All user profile images, fallback initials, and status avatars must use `Avatar`, `AvatarImage`, and `AvatarFallback` from `@/components/ui/avatar`.
 
-> **Did this new agent version actually get better than the version we were already using?**
+> **Shadcn-First Invariant**: Before building any UI element or interaction from scratch, always verify whether an equivalent Shadcn component exists. If Shadcn contains the component, always adopt and compose that component rather than reinventing the wheel.
 
-The answer must be visible at multiple levels:
+### 3.2 No Arbitrary Tailwind Values
+All styling must strictly use standard Tailwind utility classes and theme tokens. Arbitrary value brackets (e.g., `px-[22px]`, `w-[200px]`, `text-[13px]`) are prohibited. Use standard Tailwind scale units (`px-4.5`, `max-w-xs`, `text-sm`, etc.).
 
-- aggregate score
-- pass rate / accuracy
-- cost
-- tail latency
-- baseline delta
-- overall status
-- test-case-level breakdown
+### 3.3 Form Architecture
+Forms are built on top of type-safe form primitives (`@/components/form`):
+- `<Form<TSchema>>`: Context provider wrapping `react-hook-form` and `@hookform/resolvers/zod`.
+- `<FormField>`: Layout wrapper providing accessible labels (`<label htmlFor={id}>`), error messaging (`role="alert"`), and hint text.
+- `<SubmitButton>`: Context-aware submit button with automatic loading state and spinner.
+- Type-safe schema validation defined via `zod`.
 
-A useful evaluation interface must therefore preserve both the absolute result and the change relative to a known baseline.
+### 3.4 Dual-Theme Design Tokens (Dark & Light Mode)
+EvalBench provides seamless dark and light mode support via `next-themes` and the `<ModeToggle />` component:
 
----
+| Token | Light Mode | Dark Mode | Usage |
+|---|---|---|---|
+| `bg-background` | `#FFFFFF` | `#0A0A0A` | Main page background |
+| `text-foreground` | `#1C1F26` | `#FAFAFA` | Primary typography |
+| `bg-card` | `#FFFFFF` | `#141414` | Card / surface backgrounds |
+| `border-border` | `#E4E7EB` | `#262626` | Hairline borders & dividers |
+| `text-muted-foreground` | `#6B7078` | `#A1A1AA` | Secondary copy, metadata |
+| `bg-blue-600` / `text-blue-600` | `#2563EB` | `#3B82F6` (dark) | Primary brand accent & positive diffs |
+| `text-destructive` | `#DC2626` | `#EF4444` | Errors, regressions, alerts |
+| `text-emerald-600` | `#059669` | `#34D399` | Pass markers, test completions |
 
-## 4. Goals
-
-### 4.1 Primary Goals
-
-The design should:
-
-- Make baseline-versus-candidate comparison immediately understandable.
-- Surface regressions prominently.
-- Show accuracy, cost, and latency together.
-- Provide a searchable operational surface for evaluation runs.
-- Allow users to inspect an individual run without leaving the run list.
-- Make run-level and test-case-level evaluation results conceptually accessible.
-- Maintain a technical, data-first visual language.
-
-### 4.2 UX Goals
-
-The interface should allow a user to answer the following within seconds:
-
-- What changed?
-- Did the score improve or regress?
-- How did cost change?
-- How did latency change?
-- Which run caused the regression?
-- What happened at the test-case level?
+**Mode Toggle Placement**:
+- Kept in the landing page **Footer** and auth page **Top Right**, leaving primary navigation headers clean and focused.
 
 ---
 
-## 5. Non-Goals
+## 4. Typography
 
-The supplied prototype does not define the following and this design does not treat them as already implemented:
+EvalBench utilizes a 4-font typography system:
 
-- Authentication implementation.
-- Authorization or role-based access control.
-- Database implementation.
-- Agent execution infrastructure.
-- Model/provider integration.
-- Evaluation scoring algorithms.
-- Statistical significance calculations.
-- Production deployment architecture.
-- Billing implementation.
-- Notification delivery.
-- Full mobile behavior.
-- Implementations for the `Agents`, `Suites`, `Traces`, and `Settings` dashboard views.
-
-These may become future design documents.
+| Role | Font Family | Tailwind Class | Usage |
+|---|---|---|---|
+| **Headings** | Space Grotesk | `font-heading` | Page titles, section headings, card titles |
+| **Editorial Accents** | Fraunces | `font-serif italic` | Key highlight words (e.g., *measured*, *production*) |
+| **Body / UI** | Inter / Geist Sans | `font-sans` | Paragraphs, labels, buttons, form inputs |
+| **Technical Data** | JetBrains Mono | `font-mono` | Eyebrow markers (`// 01`), run IDs, scores, latencies |
 
 ---
 
-## 6. Product Concepts
+## 5. User Surfaces & Layouts
 
-### 6.1 Agent
-
-An AI system being evaluated.
-
-Example:
-
-```text
-support-agent
-```
-
-### 6.2 Agent Version
-
-A specific version of an agent.
-
-Example:
-
-```text
-support-agent v4.2
-```
-
-### 6.3 Evaluation Suite
-
-A named collection of test cases.
-
-Examples shown by the prototype:
-
-```text
-core-suite
-rag-suite
-planning-suite
-```
-
-The prototype identifies the `core-suite` example as containing 128 test cases.
-
-### 6.4 Evaluation Run
-
-One execution of an agent version against an evaluation suite.
-
-Example:
-
-```text
-run-8f21a3
-```
-
-### 6.5 Baseline
-
-The reference run/version used for comparison.
-
-### 6.6 Candidate
-
-The newer agent version being compared against the baseline.
-
-### 6.7 Test Case
-
-An individual evaluation case within a suite.
-
-The prototype exposes a test-case breakdown inside the run-detail drawer, although the detailed test-case schema is not defined.
-
-### 6.8 Regression
-
-A run that performs worse relative to the selected baseline.
-
-The prototype demonstrates this using a negative baseline delta and warning styling.
+### 5.1 Landing Page
+- **Header**: Minimalist brand logo with blue dot square (`h-2 w-2 rounded-xs bg-blue-600`), navigation links, and dynamic session-aware controls:
+  - *Unauthenticated*: Renders `Sign in` and `Get started` buttons.
+  - *Authenticated*: Renders a direct `Dashboard` button and a compact, space-efficient circular `Avatar` trigger with a live runner daemon indicator.
+- **Hero**:
+  - Live pulse status dot (`PulseDot`).
+  - Tightened headline: *"Every agent change, measured against the last."* with serif italic accent on *measured*.
+  - Subtitle: Clear explanation of multi-axis evaluation (accuracy, cost, latency).
+  - Primary CTA link (`Run your first eval` / `Get started free` dynamically routing to `/runs/new` or `/dashboard` for logged-in users) and secondary link (`Read the docs`).
+- **Scoreboard**: Central baseline-versus-candidate demonstration with side-by-side metric bars.
+- **Three Core Pillars**: Dedicated sections for Accuracy, Cost, and Latency with technical feature lists.
+- **Demo Comparison Table**: Rendered using Shadcn `Table` primitives with static non-clickable demo runs.
+- **CTA Strip**: Directs unauthenticated visitors to `/signup` and authenticated users to `/dashboard` (*"Go to dashboard"*).
+- **Footer**: Brand copyright, navigation links, and the `<ModeToggle />`.
 
 ---
 
-# 7. Proposed User Experience
+### 5.2 Authentication Surfaces (Login & Sign Up)
 
-## 7.1 High-Level Flow
+Both authentication surfaces reject generic floating card boxes in favor of a **Split-Screen Studio Workbench** layout:
 
 ```text
-Agent Version
-      |
-      v
-Evaluation Suite
-      |
-      v
-Evaluation Run
-      |
-      +---- Score
-      +---- Accuracy / Pass Rate
-      +---- Cost
-      +---- p95 Latency
-      |
-      v
-Compare With Baseline
-      |
-      +---- Improvement
-      +---- Baseline
-      +---- Regression
-      |
-      v
-Inspect Run
-      |
-      v
-Test-Case Breakdown
++------------------------------------------+------------------------------------------+
+| LEFT PANEL: Workbench Visuals            | RIGHT PANEL: Cardless Form Surface       |
+|                                          |                                          |
+| [Wordmark]          [Telemetry Badge]    | [Back to site]             [ModeToggle]  |
+|                                          |                                          |
+| [Dynamic Content: Terminal / Minimal]    | [// Eyebrow]                             |
+|                                          | [Heading: Sign in / Create account]      |
+|                                          | [TicksDivider]                           |
+|                                          |                                          |
+|                                          | [Form Fields with Shadcn Input]          |
+|                                          | [SubmitButton]                           |
+|                                          |                                          |
+| [Security & Protocol Marker]             | [Account Switcher Link]                  |
++------------------------------------------+------------------------------------------+
 ```
 
-The execution pipeline above is a system-level interpretation of the product behavior described in the prototype. The supplied HTML does not implement the actual evaluation engine.
+#### Login Page (`/login`)
+- **Left Panel (Desktop)**: **Live Evaluation Runner Terminal Stream**:
+  - Top titlebar: `evalbench-runner · core-suite · v4.2`.
+  - Invocation: `$ evalbench test --suite support-agent --baseline v4.1 --candidate v4.2`.
+  - Color-coded live execution lines with micro-latencies (`✔ [1/128] intent_classification · 28ms`).
+  - Metric summary footer (`128/128 Passed`, Score `94.2 (+1.8)`, Latency `1.0s`, Cost `$0.049`).
+  - Zero-regression verification confirmation.
+- **Right Panel**:
+  - Cardless, open form layout.
+  - Zod schema validation: Email format + Password.
+  - Shadcn `Input` with `autoComplete` and `aria-invalid` accessibility attributes.
+
+#### Sign Up Page (`/signup`)
+- **Left Panel (Desktop)**: **Quiet, Minimalist Editorial (Distraction-Free)**:
+  - Editorial headline: *"The evaluation stack for teams building production AI agents."*
+  - 3-point minimal checklist: Automated regression detection, side-by-side diffs, and CI/CD pipelines.
+  - Low visual noise designed to maximize signup conversion without distraction.
+- **Right Panel**:
+  - Cardless, open form layout.
+  - Fields: Full name, Work email, Password (minimum 8 characters).
+  - Shadcn `Input` components + `<SubmitButton>` with automatic loading spinner.
 
 ---
 
-# 8. Detailed Design
+### 5.3 Operational Dashboard
 
-## 8.1 Landing Page
-
-The landing page is responsible for product communication and demonstration.
-
-### Navigation
-
-The header contains:
-
-```text
-EvalBench       Product  Docs  Changelog  Pricing       Sign in  Get started
-```
-
-Navigation destinations are placeholders in the supplied source.
-
-### Hero
-
-The hero contains:
-
-- a live evaluation status indicator
-- a primary headline
-- explanatory product copy
-- a primary CTA
-- a documentation CTA
-- a baseline/candidate scoreboard
-
-The headline is:
-
-```text
-Every agent change, measured against the last one.
-```
-
-### Scoreboard
-
-The scoreboard is the principal product visualization.
-
-Structure:
-
-```text
-core-suite · 128 test cases
-
-support-agent v4.1              support-agent v4.2
-baseline                         candidate
-
-92.4                             94.2
-baseline run                     ▲ +1.8 pts
-
-accuracy  92%                    accuracy  94%
-cost/run  $.038                  cost/run  $.049
-p95       1.1s                   p95       1.0s
-```
-
-The design deliberately shows that improvement is multidimensional. The candidate improves score and latency but has a higher cost.
-
-### Tracked Metrics
-
-The landing page explains three axes:
-
-#### Accuracy
-
-The prototype describes accuracy as pass rate against the evaluation suite, with breakdown by test case and failure category.
-
-#### Cost
-
-Cost is represented per run. The prototype's explanatory copy also references token usage and dollars.
-
-#### Latency
-
-Latency is represented using p95, emphasizing the tail rather than only an average.
-
-### Comparison Table
-
-The landing page includes a smaller recent-runs table with:
-
-```text
-Run
-Agent
-Suite
-Score
-Δ baseline
-Status
-```
-
-This is a marketing/demo representation of the operational dashboard.
-
-### CTA
-
-The final CTA is:
-
-```text
-Ship the version that actually scored better.
-```
-
-with:
-
-```text
-Get started free
-```
+- **Sidebar Navigation**: `Runs`, `Agents`, `Suites`, `Traces`, `Settings`.
+- **Top Bar**: Search bar with Shadcn `Input`, environment badge, user avatar.
+- **Runs Page (`/runs`)**:
+  - Top metrics summary (Total runs, Avg score, Regressions flagged, Avg cost).
+  - Search/filter input built on Shadcn `Input`.
+  - Runs table built on Shadcn `Table`.
+  - Actions using Shadcn `Button`.
+- **Jobs Page (`/jobs`)**:
+  - YAML config path submission form using Shadcn `Input` and `Button`.
+  - Real-time job tracker with status badges (`queued`, `running`, `completed`, `failed`).
+- **New Run Page (`/runs/new`)**:
+  - Provider selector and model name input.
+  - Dataset path and prompt template inputs using Shadcn `Input`.
+  - Evaluator toggle chips using Shadcn `Button`.
+- **Compare Page (`/compare`)**:
+  - Side-by-side multi-run comparison matrix built on Shadcn `Card` and `Table`.
+  - Highlights deltas in test cases, latency, cost, and evaluator pass rates.
 
 ---
 
-## 8.2 Dashboard
+### 5.4 Interactive Station HUD & User Cockpit Dropdown
 
-The dashboard is the operational product surface.
-
-### Layout
+To avoid generic, cookie-cutter floating box menus, user identity and session controls utilize a **Workbench Station HUD** design language built strictly on top of Shadcn `DropdownMenu` and `Avatar` primitives:
 
 ```text
-+--------------------+--------------------------------------------+
-| Sidebar            | Top bar                                    |
-|                    |                                            |
-| EvalBench          | Runs [production]      Search      Avatar |
-|                    |                                            |
-| Runs               | Stats                                      |
-| Agents             |                                            |
-| Suites             | Trend                                      |
-| Traces             |                                            |
-| Settings           | Runs table                                 |
-|                    |                                            |
-| v0.9.2             |                                            |
-+--------------------+--------------------------------------------+
++-------------------------------------------------------------+
+| // eval workbench                          [● runner active] |
+| [Avatar]  User Display Name                                 |
+|           user@company.com                                  |
++-------------------------------------------------------------+
+| WORKBENCH NAVIGATION                                        |
+|   [Dashboard Icon]        Dashboard             workspace   |
+|   [Activity Icon]         Evaluation Runs         history   |
+|   [GitCompare Icon]       Compare Matrix             diff   |
+|   [Settings Icon]         Settings                          |
+|   [Sun / Moon Icon]       Light / Dark Theme         mode   |
++-------------------------------------------------------------+
+|   [LogOut Icon]           Log out               terminate   |
++-------------------------------------------------------------+
 ```
 
-The sidebar width in the prototype is 220px.
-
-### Sidebar Navigation
-
-```text
-Runs
-Agents
-Suites
-Traces
-Settings
-```
-
-Only `Runs` is implemented as a real dashboard view.
-
-### Top Bar
-
-The top bar contains:
-
-- page title: `Runs`
-- environment pill: `production`
-- search field
-- user avatar
-
-The search field is visually present but disabled in the supplied implementation.
+- **Trigger Philosophy**: A compact, space-efficient circular `Avatar` trigger (`size-8`) with a live emerald runner daemon dot (`runner active`) in the corner. Avoids horizontal navbar clutter by omitting raw name strings from the main navigation row.
+- **Identity HUD**: Prominent studio card header featuring a monospace telemetry tag (`// eval workbench`), pulsing live daemon status indicator, user avatar, name, and monospace email.
+- **Direct Workbench Navigation**: Streamlined action items connecting users to Dashboard (`workspace`), Evaluation Runs (`history`), Compare Matrix (`diff`), and Settings.
+- **Integrated Theme Switcher**: In-menu dark/light mode toggle with matching `Sun`/`Moon` icons reflecting current theme state.
+- **Session Termination**: Clean `terminate` sign-out item with destructive hover styling that reactively purges cookies via Better Auth `authClient.signOut()`.
 
 ---
 
-# 9. Dashboard Data Model
-
-## 9.1 Evaluation Run
-
-The UI implies the following conceptual model:
-
-```text
-EvaluationRun
-├── runId
-├── agent
-│   ├── name
-│   └── version
-├── suite
-│   ├── name
-│   └── testCaseCount
-├── score
-├── deltaFromBaseline
-├── passRate
-├── cost
-├── p95Latency
-└── status
-```
-
-This is an inferred domain model from the UI, not an existing database schema.
-
-## 9.2 Test Case Result
-
-The drawer implies a model resembling:
-
-```text
-TestCaseResult
-├── testCase
-├── result
-└── metrics
-```
-
-The source does not define the exact fields.
-
----
-
-# 10. Metrics and Scoring
-
-## 10.1 Score
-
-The prototype shows a numeric aggregate score such as:
-
-```text
-94.2
-92.4
-81.6
-87.9
-76.0
-```
-
-The scoring formula is not defined.
-
-## 10.2 Pass Rate
-
-Example values:
-
-```text
-96%
-94%
-78%
-89%
-71%
-```
-
-The prototype uses pass rate as the operational representation of accuracy.
-
-## 10.3 Cost
-
-Example values:
-
-```text
-$0.042
-$0.038
-$0.061
-$0.055
-$0.029
-```
-
-The prototype's marketing copy connects this metric to token/dollar tracking.
-
-## 10.4 p95 Latency
-
-Example values:
-
-```text
-1.2s
-1.1s
-2.4s
-1.9s
-0.9s
-```
-
-The use of p95 makes the tail visible.
-
-## 10.5 Baseline Delta
-
-The UI uses:
-
-```text
-positive delta → accent / improvement
-negative delta → warning / regression
-baseline        → neutral reference
-```
-
-The exact regression threshold is not defined.
-
----
-
-# 11. Dashboard Statistics
-
-The dashboard exposes four top-level values:
-
-| Metric | Prototype value |
-|---|---:|
-| Total runs today | 214 |
-| Avg score | 88.4 |
-| Regressions flagged | 3 |
-| Avg cost / run | $0.043 |
-
-The first two values are animated from zero to the displayed targets using a 900ms count-up animation.
-
-The latter two are static in the supplied source.
-
----
-
-# 12. Trend Visualization
-
-The dashboard contains a score trend card for:
-
-```text
-support-agent · score trend, last 14 runs
-```
-
-Current displayed result:
-
-```text
-94.2 ▲ +1.8
-```
-
-The chart is implemented as inline SVG.
-
-The source contains:
-
-- line path
-- filled area
-- final point
-- gradient definition
-
-The path coordinates are hard-coded, so this is demonstration data rather than a dynamically generated chart.
-
----
-
-# 13. Runs Table Design
-
-The dashboard's primary table contains nine columns:
-
-```text
-Run
-Agent
-Suite
-Score
-Δ baseline
-Pass rate
-Cost
-p95
-Status
-```
-
-Example data from the prototype:
-
-| Run | Agent | Suite | Score | Δ | Pass Rate | Cost | p95 | Status |
-|---|---|---|---:|---:|---:|---:|---:|---|
-| run-8f21a3 | support-agent v4.2 | core-suite | 94.2 | +1.8 | 96% | $0.042 | 1.2s | pass |
-| run-7c19b0 | support-agent v4.1 | core-suite | 92.4 | baseline | 94% | $0.038 | 1.1s | pass |
-| run-6ab445 | retrieval-agent v2.0 | rag-suite | 81.6 | -6.3 | 78% | $0.061 | 2.4s | regression |
-| run-5f0e21 | retrieval-agent v1.9 | rag-suite | 87.9 | baseline | 89% | $0.055 | 1.9s | pass |
-| run-4d3c10 | planner-agent v1.3 | planning-suite | 76.0 | -2.1 | 71% | $0.029 | 0.9s | pass |
-
-Rows are styled as interactive, and the prototype includes a `data-run` index for the sample records.
-
----
-
-# 14. Run Filtering
-
-The UI exposes:
-
-```text
-All
-Regressions
-Baselines
-```
-
-`All` is initially selected.
-
-The source implements the visual state styling but does not implement the filtering behavior itself.
-
-A production implementation should define:
-
-```text
-activeFilter
-query
-page
-pageSize
-sort
-```
-
-and use these values consistently for table rendering and data retrieval.
-
----
-
-# 15. Run Detail Drawer
-
-Selecting a run is intended to open a right-side drawer.
-
-### Drawer structure
-
-```text
-run-8f21a3
-support-agent v4.2                           x
-
-Score                 Δ baseline
-94.2                  +1.8
-
-BREAKDOWN BY TEST CASE
-
-[test-case rows]
-```
-
-The drawer is 400px wide in the prototype.
-
-### Animation
-
-Opening:
-
-```css
-transform: translateX(0)
-```
-
-Closed:
-
-```css
-transform: translateX(100%)
-```
-
-A backdrop becomes visible while the drawer is open.
-
-### Test Case Breakdown
-
-The source creates an empty `drawerCases` container.
-
-The intended content is a breakdown by test case, but the prototype does not define the data-loading or rendering implementation.
-
----
-
-# 16. Frontend State
-
-A production UI can formalize the state currently implicit in the prototype as:
-
-```text
-AppState
-├── currentView
-├── selectedRunId
-├── drawerOpen
-├── activeFilter
-├── searchQuery
-└── dashboardStats
-```
-
-Suggested values:
-
-```text
-currentView:
-  landing | dashboard
-
-selectedRunId:
-  string | null
-
-drawerOpen:
-  boolean
-
-activeFilter:
-  all | regressions | baselines
-```
-
----
-
-# 17. System Architecture
-
-The supplied artifact is a static frontend prototype. The following architecture is the recommended boundary for turning that prototype into a functioning product.
-
-```text
-                 +-----------------------+
-                 |       Web Client      |
-                 | Landing / Dashboard   |
-                 +-----------+-----------+
-                             |
-                             v
-                 +-----------------------+
-                 |    Application API    |
-                 | Runs / Agents / Suites|
-                 +-----+------------+----+
-                       |            |
-              +--------+            +---------+
-              v                                v
-    +---------------------+        +---------------------+
-    | Evaluation Service  |        | Persistent Storage  |
-    | suite execution     |        | runs / cases / data |
-    +----------+----------+        +---------------------+
-               |
-               v
-      +---------------------+
-      | Model / Agent       |
-      | Providers & Tools   |
-      +---------------------+
-```
-
-This architecture is proposed and is not present in the source.
-
----
-
-# 18. Evaluation Execution Pipeline
-
-A complete EvalBench system would need an execution path equivalent to:
-
-```text
-Select agent version
-       |
-       v
-Select evaluation suite
-       |
-       v
-Load test cases
-       |
-       v
-Execute agent against cases
-       |
-       +---- capture output
-       +---- capture latency
-       +---- capture token usage
-       |
-       v
-Score test cases
-       |
-       v
-Aggregate run metrics
-       |
-       v
-Compare with baseline
-       |
-       v
-Classify result
-       |
-       v
-Persist run
-       |
-       v
-Expose to dashboard
-```
-
-The actual scoring and orchestration algorithms are not defined by the supplied source.
-
----
-
-# 19. API Design
-
-The source does not contain API endpoints. The following are proposed interfaces corresponding to the UI.
-
-## 19.1 List Runs
-
-```http
-GET /api/runs
-```
-
-Possible query parameters:
-
-```text
-filter
-search
-page
-pageSize
-agent
-suite
-status
-```
-
-## 19.2 Get Run
-
-```http
-GET /api/runs/{runId}
-```
-
-Potential response:
-
-```json
-{
-  "runId": "run-8f21a3",
-  "agent": {
-    "name": "support-agent",
-    "version": "v4.2"
-  },
-  "suite": {
-    "name": "core-suite",
-    "testCaseCount": 128
-  },
-  "score": 94.2,
-  "deltaFromBaseline": 1.8,
-  "passRate": 96,
-  "cost": 0.042,
-  "p95LatencyMs": 1200,
-  "status": "pass",
-  "cases": []
+## 6. Data Models & API Contracts
+
+### 6.1 Evaluation Run
+```typescript
+interface EvaluationRun {
+  run_id: string
+  dataset_name: string
+  provider: string
+  model: string
+  prompt_template?: string
+  system_prompt?: string
+  total_test_cases: number
+  metrics: {
+    mean_latency_ms: number
+    total_cost_usd: number
+    pass_rates: Record<string, number>
+  }
+  created_at: string
 }
 ```
 
-The schema is illustrative, not source-defined.
-
----
-
-# 20. Persistence Model
-
-The UI implies persistence for:
-
-```text
-Agent
-AgentVersion
-EvaluationSuite
-TestCase
-EvaluationRun
-TestCaseResult
-BaselineAssignment
-RunMetrics
-```
-
-Conceptual relationship:
-
-```text
-Agent
-  |
-  +-- AgentVersion
-          |
-          +-- EvaluationRun
-                  |
-                  +-- EvaluationSuite
-                  |       |
-                  |       +-- TestCase
-                  |
-                  +-- TestCaseResult
-```
-
-The source does not specify a database product or physical schema.
-
----
-
-# 21. Visual Design System
-
-## 21.1 Colors
-
-The source defines these tokens:
-
-```css
---bg: #F6F7F5;
---surface: #FFFFFF;
---ink: #1C1F26;
---muted: #6B7078;
---faint: #9A9FA6;
---line: #DCDFE2;
---line-strong: #C4C8CC;
---accent: #3450FF;
---accent-dim: #EEF0FF;
---warn: #D65C34;
---warn-dim: #FBEEE9;
-```
-
-## 21.2 Typography
-
-| Usage | Typeface |
-|---|---|
-| Body | Inter |
-| Headings | Space Grotesk |
-| Display values | Fraunces |
-| Technical metadata | JetBrains Mono |
-
-## 21.3 Shape
-
-The interface uses very small radii:
-
-```css
---r-sm: 3px;
---r-md: 6px;
-```
-
-The resulting visual language is compact, technical, and data-oriented.
-
-## 21.4 Decorative System
-
-The prototype uses:
-
-- subtle grid textures
-- repeated tick dividers
-- live pulse indicators
-- restrained shadows
-- blue accent states
-- orange regression states
-
-These patterns are used consistently across the landing and dashboard surfaces.
-
----
-
-# 22. Accessibility
-
-The source already uses semantic structural elements such as:
-
-- `<nav>`
-- `<header>`
-- `<main>`
-- `<aside>`
-- `<section>`
-- `<table>`
-- `<footer>`
-
-However, several production accessibility requirements remain unspecified.
-
-Recommended additions:
-
-- visible keyboard focus states
-- accessible names for controls
-- keyboard interaction for the drawer
-- Escape-key drawer close
-- focus trapping for modal/drawer state
-- `aria-expanded` and `aria-controls` where applicable
-- accessible chart descriptions
-- status announcements where appropriate
-- semantic button elements instead of non-interactive navigation placeholders
-
----
-
-# 23. Responsive Design
-
-The supplied CSS supports flexible desktop widths but does not provide complete mobile breakpoints.
-
-Responsive behavior still needs to be specified for:
-
-- sidebar collapse
-- horizontal table scrolling
-- filter controls
-- top navigation
-- hero stacking
-- scoreboard stacking
-- drawer width
-- three-column metric section
-
-This should be addressed before treating the prototype as production-ready.
-
----
-
-# 24. Error States
-
-The source does not define error UI.
-
-Production states should include at least:
-
-```text
-No runs
-Loading runs
-Run failed
-Run partially completed
-Baseline unavailable
-Run detail unavailable
-Suite unavailable
-Evaluation timeout
-Metric unavailable
-API error
-```
-
-For each state, the UI should distinguish between:
-
-- recoverable errors
-- evaluation failures
-- data-loading failures
-- configuration errors
-
----
-
-# 25. Security and Authorization
-
-Authentication is represented only by a `Sign in` action in the landing page.
-
-A production system must separately define:
-
-- authentication
-- sessions
-- organization/workspace isolation
-- authorization
-- API authorization
-- secret management
-- agent credential protection
-- evaluation-data access
-- auditability
-
-None of these are implemented in the provided artifact.
-
----
-
-# 26. Performance Considerations
-
-The current prototype is intentionally lightweight:
-
-- plain HTML
-- CSS
-- vanilla JavaScript
-- inline SVG
-- no network requests
-- small animations
-
-A production run history can become large. The dashboard should therefore consider:
-
-- server-side pagination
-- filtering at the API level
-- sorting at the API level
-- lazy loading run details
-- virtualized rendering for very large result sets
-- caching relatively static agent and suite metadata
-- precomputed aggregate metrics where appropriate
-
----
-
-# 27. Testing Strategy
-
-## 27.1 Unit Tests
-
-Recommended unit-test targets:
-
-- score formatting
-- delta formatting
-- regression classification
-- metric formatting
-- filter logic
-- state transitions
-
-## 27.2 Component Tests
-
-Test:
-
-- scoreboard
-- stat cards
-- trend chart
-- runs table
-- status badges
-- filter controls
-- run-detail drawer
-
-## 27.3 Integration Tests
-
-Test the primary flow:
-
-```text
-load dashboard
-    |
-    v
-retrieve runs
-    |
-    v
-apply filter
-    |
-    v
-select run
-    |
-    v
-open detail drawer
-    |
-    v
-retrieve test-case results
-```
-
-## 27.4 End-to-End
-
-The highest-value end-to-end flow is:
-
-```text
-Landing
-  |
-  v
-Get started
-  |
-  v
-Dashboard
-  |
-  v
-Runs
-  |
-  v
-Inspect regression
-  |
-  v
-Review test cases
+### 6.2 Distributed Job
+```typescript
+interface Job {
+  job_id: string
+  status: 'queued' | 'running' | 'completed' | 'failed'
+  config_path?: string
+  run_id?: string
+  error?: string
+  created_at: string
+}
 ```
 
 ---
 
-# 28. Alternatives Considered
-
-## 28.1 Score-Only Dashboard
-
-**Alternative:** Show only the overall evaluation score.
-
-**Rejected because:** The product explicitly treats accuracy, cost, and latency as separate dimensions. The prototype demonstrates that a higher score can coexist with higher cost.
-
-## 28.2 Chart-First Dashboard
-
-**Alternative:** Make time-series charts the primary interaction.
-
-**Rejected for the current design:** The prototype prioritizes the run table because individual version comparisons and regressions are the central workflow.
-
-## 28.3 Modal Instead of Drawer
-
-**Alternative:** Open run details in a centered modal.
-
-**Rejected for the prototype's interaction model:** A side drawer preserves the context of the run table and allows the user to inspect one result without abandoning the list.
-
-## 28.4 Generic SaaS Visual Style
-
-**Alternative:** Use rounded cards, gradients, and highly decorative visuals.
-
-**Rejected because:** The supplied visual system intentionally uses compact borders, technical typography, grid texture, tick marks, and restrained color to communicate an engineering/evaluation product.
-
----
-
-# 29. Risks and Open Design Questions
-
-The following questions are not answered by the supplied source and should be resolved before backend implementation.
-
-### Baseline selection
-
-- Is the baseline explicitly selected by the user?
-- Is there one baseline per agent?
-- One baseline per suite?
-- One baseline per environment?
-- Can a baseline be pinned to a release?
-
-### Regression policy
-
-- Is a negative delta automatically a regression?
-- Are cost and latency capable of independently triggering regressions?
-- Are thresholds configurable?
-- Are small changes ignored?
-- Is statistical significance required?
-
-### Scoring
-
-- How is the aggregate score calculated?
-- Are test cases equally weighted?
-- Can test cases have different weights?
-- How are evaluator failures scored?
-
-### Evaluation execution
-
-- How are agent versions invoked?
-- How are tool calls captured?
-- How are traces stored?
-- How is cost calculated across different model providers?
-
-### Data retention
-
-- How long are raw evaluation results stored?
-- Are full model outputs retained?
-- Are traces retained indefinitely?
-- Which metrics are precomputed?
-
----
-
-# 30. Rollout Plan
-
-A production implementation can be staged independently of the visual prototype.
-
-## Phase 1 — UI Foundations
-
-Implement:
-
-- landing page
-- dashboard layout
-- runs table
-- metric display components
-- run-detail drawer
-- loading/error/empty states
-
-## Phase 2 — Data Layer
-
-Implement:
-
-- agents
-- versions
-- suites
-- runs
-- test-case results
-- baseline relationships
-
-## Phase 3 — Evaluation Engine
-
-Implement:
-
-- suite execution
-- scoring
-- cost tracking
-- latency collection
-- baseline comparison
-- regression classification
-
-## Phase 4 — Operational Features
-
-Implement:
-
-- search
-- run filtering
-- pagination
-- traces
-- agent management
-- suite management
-- settings
-- authentication and authorization
-
-## Phase 5 — Hardening
-
-Add:
-
-- accessibility
-- mobile behavior
-- performance optimization
-- observability
-- audit logging
-- production security controls
-
----
-
-# 31. Success Criteria
-
-The design succeeds when an engineer evaluating an agent version can move from a newly completed run to an informed ship/no-ship decision using the dashboard.
-
-At minimum, the interface should make these facts unambiguous:
-
-```text
-Current version
-Baseline version
-Score
-Score delta
-Pass rate
-Cost
-p95 latency
-Overall status
-Test-case-level failures
-```
-
-The critical product outcome is not simply "display an evaluation score"; it is to make **change from baseline** understandable and actionable.
-
----
-
-# 32. Source-to-Design Traceability
-
-The following implementation areas are directly represented in the supplied source:
-
-| Design area | Source evidence |
-|---|---|
-| Landing page | `#landing` page |
-| Dashboard | `#dashboard` page |
-| Three metrics | Accuracy / Cost / Latency sections |
-| Baseline/candidate comparison | Scoreboard |
-| Recent runs | Landing comparison table |
-| Dashboard stats | Statistics strip |
-| Trend | Inline SVG trend card |
-| Run filters | All / Regressions / Baselines |
-| Run drawer | `drawer` and `drawerCases` |
-| Typography | Imported four font families |
-| Visual tokens | CSS `:root` variables |
-| Live indicator | `.pulse` |
-| Tick divider | `.ticks` and generated spans |
-
-The source also makes clear which parts are incomplete as functional product behavior. In particular, the prototype does not implement backend data retrieval, persistence, filtering logic, search, evaluation execution, or full dashboard routing.
-
----
-
-# 33. Appendix A — Prototype Data
-
-The prototype currently demonstrates these sample runs:
-
-```text
-run-8f21a3
-support-agent v4.2
-core-suite
-score 94.2
-delta +1.8
-pass rate 96%
-cost $0.042
-p95 1.2s
-status pass
-
-run-7c19b0
-support-agent v4.1
-core-suite
-score 92.4
-baseline
-pass rate 94%
-cost $0.038
-p95 1.1s
-status pass
-
-run-6ab445
-retrieval-agent v2.0
-rag-suite
-score 81.6
-delta -6.3
-pass rate 78%
-cost $0.061
-p95 2.4s
-status regression
-
-run-5f0e21
-retrieval-agent v1.9
-rag-suite
-score 87.9
-baseline
-pass rate 89%
-cost $0.055
-p95 1.9s
-status pass
-
-run-4d3c10
-planner-agent v1.3
-planning-suite
-score 76.0
-delta -2.1
-pass rate 71%
-cost $0.029
-p95 0.9s
-status pass
-```
-
----
-
-# 34. Appendix B — Current Prototype Behavior vs. Production Target
-
-| Capability | Prototype | Production target |
-|---|---|---|
-| Landing page | Implemented | Retain |
-| Dashboard runs page | Implemented | Retain and connect to API |
-| Animated metrics | Implemented | Retain where useful |
-| Score trend | Static SVG | Data-driven chart |
-| Search | Disabled | Functional |
-| Filters | Visual only | Functional |
-| Drawer | UI structure | Data-driven |
-| Test-case breakdown | Placeholder | Functional |
-| Agent management | Placeholder navigation | Full feature |
-| Suite management | Placeholder navigation | Full feature |
-| Traces | Placeholder navigation | Full feature |
-| Settings | Placeholder navigation | Full feature |
-| Evaluation execution | Not present | Required |
-| Persistence | Not present | Required |
-| Authentication | Not present | Required |
-| Authorization | Not present | Required |
-| Error states | Not defined | Required |
-| Accessibility hardening | Partial | Required |
-| Mobile behavior | Incomplete | Required |
-
----
-
-# 35. Final Recommendation
-
-Treat the supplied EvalBench artifact as the **reference UX and interaction prototype**, not as the complete system specification.
-
-The implementation should preserve the prototype's strongest design decision: every evaluation result is interpreted relative to a baseline and across multiple dimensions rather than as an isolated score.
-
-The next engineering step should be to formalize the evaluation-run data contract and baseline/regression semantics before building the backend, because those decisions determine the correctness of the dashboard's core comparisons.
+## 7. Accessibility & Engineering Quality Checklist
+
+- [x] All interactive controls use semantic HTML `<button>` / Shadcn `Button` instead of non-interactive `<div>` or raw `<a>` tags.
+- [x] All form inputs link labels via `htmlFor`/`id` and bind `aria-invalid` and `role="alert"` for error states.
+- [x] Full responsive support across mobile, tablet, and desktop viewports.
+- [x] Zero arbitrary Tailwind classes; consistent token reuse.
+- [x] Dark mode and light mode tested with optimal color contrast ratios.

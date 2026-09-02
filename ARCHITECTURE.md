@@ -53,7 +53,7 @@ C4Container
     Container(ui, "Client UI / Pages", "React 19, Tailwind CSS v4, shadcn/ui, Lucide", "Renders landing page, dashboard, runs table, forms, and metric views")
     Container(query, "TanStack Query Layer", "TanStack React Query v5", "Client state, caching, background polling, mutations")
     Container(auth_server, "Better Auth Server Handlers", "Better Auth, Next.js API Routes", "Handles /api/auth/* endpoints, token validation, session cookies")
-    Container(middleware, "Next.js Middleware", "Edge / Node.js Middleware", "Guards (dashboard) routes by inspecting session cookies")
+    Container(proxy, "Next.js 16 Proxy", "Edge / Node.js Proxy (src/proxy.ts)", "Guards (dashboard) routes and redirects authenticated users from (auth) routes")
   }
 
   Container_Ext(api, "EvalBench Backend", "FastAPI / Python", "Executes benchmark pipelines and aggregates scores")
@@ -62,7 +62,7 @@ C4Container
   Rel(user, ui, "Interacts with", "HTTPS")
   Rel(ui, query, "Calls hooks & mutations", "React Context")
   Rel(query, api, "Fetches / submits runs & jobs", "REST / JSON (apiClient)")
-  Rel(user, middleware, "Passes session cookie", "HTTPS")
+  Rel(user, proxy, "Passes session cookie", "HTTPS")
   Rel(ui, auth_server, "Signs in / out", "REST / JSON (/api/auth/*)")
   Rel(auth_server, db, "Reads & writes auth records", "SQL (pg)")
 ```
@@ -71,7 +71,7 @@ C4Container
 
 | Container / Module | Technology | Responsibility | Scaling Strategy |
 | :--- | :--- | :--- | :--- |
-| **Next.js Web App** | Next.js 16.3, React 19, TypeScript 5, shadcn/ui | Server rendering, marketing landing, dashboard, route middleware, API routes | Horizontally scalable (Vercel / Node.js / Docker) |
+| **Next.js Web App** | Next.js 16.3, React 19, TypeScript 5, shadcn/ui | Server rendering, marketing landing, dashboard, route proxy, API routes | Horizontally scalable (Vercel / Node.js / Docker) |
 | **TanStack Query Layer** | `@tanstack/react-query` v5 | Data fetching, client caching, polling for active runs/jobs, error retry | Client-side memory |
 | **Better Auth Server** | `better-auth` v1.7, `pg` | Authentication endpoints (`/api/auth/[...all]`), session verification | Scaled with Next.js server instance |
 | **EvalBench API Backend** | FastAPI, Python 3.11+ | Running benchmark pipelines against LLM providers & evaluator suites | Independent worker/backend scaling |
@@ -88,6 +88,8 @@ graph TD
   subgraph Presentation Layer
     Pages["Next.js Pages (app/...)"]
     Landing["Landing Components (components/landing/*)"]
+    StationHud["Station HUD User Station (components/landing/header.tsx)"]
+    FormSystem["Type-Safe Form System (components/form/*)"]
     UiPrimitives["shadcn UI Primitives (components/ui/*)"]
     Layouts["Layout Components (Sidebar, Header, Shell)"]
     Forms["Forms & Views (Runs, Jobs, Compare, Settings)"]
@@ -117,6 +119,8 @@ graph TD
 
   Pages --> Hooks
   Forms --> Hooks
+  Forms --> FormSystem
+  Landing --> StationHud
   Layouts --> Hooks
   Layouts --> AuthModule
 
@@ -139,7 +143,7 @@ graph TD
 
 - **Next.js Frontend with Python FastAPI Backend** — [ADR-001](docs/adr/001-use-nextjs-with-fastapi-backend.md): Chosen to leverage the Python AI/ML ecosystem for evaluation orchestration while using Next.js 16 / React 19 for rich interactive dashboards and Better Auth session handling.
 - **3-Layer API Communication with Native Fetch** — [ADR-003](docs/adr/003-use-fetch-over-axios.md): UI components never invoke `fetch` or `apiClient` directly. Instead, UI components consume custom TanStack Query hooks, which call dedicated module API functions, which in turn use the zero-dependency, fetch-based `apiClient`.
-- **Next.js 16 App Router & Route Groups**: Routes are organized into `(auth)` (unauthenticated card layouts for login/signup) and `(dashboard)` (authenticated layout with sidebar, header, and route-protection middleware).
+- **Next.js 16 App Router & Route Groups**: Routes are organized into `(auth)` (split-screen studio workbench layouts for login/signup) and `(dashboard)` (authenticated layout with sidebar, header, and route-protection proxy `src/proxy.ts`).
 - **Client-Side Polling for Execution State**: Since benchmark runs and distributed jobs are long-running asynchronous tasks, the frontend utilizes TanStack Query's `refetchInterval` to poll backend endpoints every 3 seconds while status is `running` or `queued`, pausing when terminal status (`completed`, `failed`, `cancelled`) is reached.
 - **Better Auth with PostgreSQL Integration** — [ADR-002](docs/adr/002-use-better-auth-for-authentication.md): Authentication is self-contained within the Next.js application using Better Auth and direct PostgreSQL storage for user records, providing email/password authentication and extensible session tokens.
 - **Type-Safe Configuration with `@t3-oss/env-nextjs`**: All environment variables (`NEXT_PUBLIC_API_BASE_URL`, `DATABASE_URL`, `BETTER_AUTH_SECRET`, etc.) are validated at runtime/build-time using Zod.
@@ -158,7 +162,7 @@ sequenceDiagram
   participant AuthClient as Better Auth Client (auth-client.ts)
   participant AuthRoute as Next.js API (/api/auth/*)
   participant Postgres as PostgreSQL DB
-  participant Middleware as Next.js Middleware
+  participant Proxy as Next.js 16 Proxy (proxy.ts)
 
   User->>LoginPage: Enters email and password
   LoginPage->>AuthClient: signIn.email({ email, password })
@@ -167,9 +171,9 @@ sequenceDiagram
   Postgres-->>AuthRoute: Session created
   AuthRoute-->>AuthClient: Set session cookie (HTTP-only) & return user
   AuthClient-->>LoginPage: Success redirect to /dashboard
-  User->>Middleware: Request /dashboard with session cookie
-  Middleware->>Middleware: Validate session cookie presence
-  Middleware-->>User: Allow access to /dashboard
+  User->>Proxy: Request /dashboard with session cookie
+  Proxy->>Proxy: Validate session cookie presence
+  Proxy-->>User: Allow access to /dashboard
 ```
 
 ### 2. Evaluation Run Creation & Polling

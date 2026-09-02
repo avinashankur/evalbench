@@ -101,12 +101,13 @@ npm run lint       # Runs ESLint checks
 
 ```
 src/
-├── app/                  # Next.js App Router (marketing landing, auth & dashboard pages)
+├── app/                  # Next.js App Router (landing, studio workbench auth & dashboard)
 ├── components/
 │   ├── common/           # Shared visual primitives (TicksDivider)
-│   ├── landing/          # Marketing landing page components (Hero, Scoreboard, etc.)
+│   ├── form/             # Type-safe form system (Form, FormField, SubmitButton)
+│   ├── landing/          # Marketing landing page components (Hero, Scoreboard, Station HUD Header)
 │   ├── layout/           # App shell, navigation sidebar, and header
-│   ├── ui/               # shadcn UI primitives (Button, Table)
+│   ├── ui/               # shadcn UI primitives (Avatar, Button, Card, DropdownMenu, Input, Table)
 │   └── mode-toggle.tsx   # Theme switcher
 ├── config/               # Site configuration and navigation metadata
 ├── env.ts                # Runtime type-safe env validation (t3-env)
@@ -115,6 +116,7 @@ src/
 │   ├── auth.ts           # Better Auth server configuration
 │   ├── auth-client.ts    # Better Auth client library
 │   └── utils.ts          # Class merging utility (cn)
+├── proxy.ts              # Next.js 16 route proxy & session cookie guard
 ├── modules/
 │   ├── runs/             # Run creation, details, results, and query hooks
 │   ├── jobs/             # Distributed jobs management and tracking
