@@ -68,6 +68,11 @@ that belongs in a single commit. Use these signals:
    (e.g. A adds a utility, B uses it), A comes first.
 4. **Name each group** with a short label that could serve as a commit scope
    (e.g. "shadcn UI setup", "auth page restyling", "docs updates").
+5. **Co-locate documentation with relevant changes.** Do not isolate documentation
+   updates (such as `ARCHITECTURE.md`, `CONTEXT.md`, `README.md`, `DESIGN.md`, or
+   how-to guides) into a separate generic docs commit if they describe or accompany
+   the specific feature, refactor, or UI changes in a group. Bundle those docs
+   directly with the corresponding code/feature commit.
 
 ## Step 4 — Present the groups
 
