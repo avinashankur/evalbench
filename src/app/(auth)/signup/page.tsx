@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 import { authClient } from '@/lib/auth-client'
 import { siteConfig } from '@/config/site'
 
@@ -94,13 +95,13 @@ export default function SignupPage() {
           />
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+          className="w-full"
         >
           {loading ? 'Creating account…' : 'Create account'}
-        </button>
+        </Button>
       </form>
 
       <p className="mt-4 text-center text-sm text-muted-foreground">

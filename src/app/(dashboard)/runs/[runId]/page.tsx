@@ -3,6 +3,7 @@
 import { use, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, RefreshCw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useGetRun, useGetRunResults } from '@/modules/runs'
 import type { RunSummaryResponse } from '@/modules/runs'
 
@@ -106,13 +107,13 @@ export default function RunDetailPage({ params }: { params: Promise<{ runId: str
               <tbody>
                 {results.results.map((r, i) => (
                   <tr key={i} className="border-b">
-                    <td className="max-w-[200px] truncate px-4 py-3">
+                    <td className="max-w-48 truncate px-4 py-3">
                       {r.test_case.question}
                     </td>
-                    <td className="max-w-[200px] truncate px-4 py-3">
+                    <td className="max-w-48 truncate px-4 py-3">
                       {r.response.text}
                     </td>
-                    <td className="max-w-[200px] truncate px-4 py-3 text-muted-foreground">
+                    <td className="max-w-48 truncate px-4 py-3 text-muted-foreground">
                       {r.test_case.expected_answer ?? '—'}
                     </td>
                     <td className="px-4 py-3">
@@ -147,20 +148,22 @@ export default function RunDetailPage({ params }: { params: Promise<{ runId: str
               {results.total}
             </p>
             <div className="flex gap-2">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="rounded-md border px-3 py-1 text-sm disabled:opacity-50"
               >
                 Previous
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage((p) => p + 1)}
                 disabled={(page + 1) * pageSize >= results.total}
-                className="rounded-md border px-3 py-1 text-sm disabled:opacity-50"
               >
                 Next
-              </button>
+              </Button>
             </div>
           </div>
         </div>

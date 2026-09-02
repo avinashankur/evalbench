@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 import { useCreateRun } from '@/modules/runs'
 import { useProviders, useEvaluators } from '@/modules/discovery'
 import type { RunCreate } from '@/modules/runs'
@@ -153,30 +154,27 @@ export default function NewRunPage() {
           <div className="flex flex-wrap gap-2">
             {(evaluatorsData?.evaluators ?? ['exact_match', 'contains', 'llm_judge']).map(
               (name) => (
-                <button
+                <Button
                   key={name}
                   type="button"
+                  size="sm"
+                  variant={selectedEvaluators.includes(name) ? 'default' : 'outline'}
                   onClick={() => toggleEvaluator(name)}
-                  className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                    selectedEvaluators.includes(name)
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'hover:bg-muted'
-                  }`}
                 >
                   {name}
-                </button>
+                </Button>
               ),
             )}
           </div>
         </fieldset>
 
-        <button
+        <Button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          className="w-full"
         >
           {isPending ? 'Starting evaluation…' : 'Start Evaluation'}
-        </button>
+        </Button>
       </form>
     </div>
   )

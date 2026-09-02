@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useCreateJob, useGetJob } from '@/modules/jobs'
+import { Button } from '@/components/ui/button'
 import { RefreshCw, CheckCircle2, XCircle, Clock } from 'lucide-react'
 
 export default function JobsPage() {
@@ -51,13 +52,12 @@ export default function JobsPage() {
             Path to a YAML config file on the server.
           </p>
         </div>
-        <button
+        <Button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
           {isSubmitting ? 'Submitting…' : 'Submit Job'}
-        </button>
+        </Button>
       </form>
 
       {/* Job tracker */}

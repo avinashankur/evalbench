@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Plus, Trash2 } from 'lucide-react'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { useListRuns, useDeleteRun } from '@/modules/runs'
 
 export default function RunsPage() {
@@ -21,7 +22,7 @@ export default function RunsPage() {
         </div>
         <Link
           href="/runs/new"
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          className={buttonVariants({ variant: 'default' })}
         >
           <Plus className="h-4 w-4" />
           New Run
@@ -86,14 +87,16 @@ export default function RunsPage() {
                     {new Date(run.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => deleteMutate(run.run_id)}
                       disabled={isDeleting}
-                      className="rounded p-1 text-muted-foreground hover:text-destructive"
+                      className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                       aria-label="Delete run"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}

@@ -1,12 +1,12 @@
 'use client'
 
-import { useTheme } from 'next-themes'
-import { Moon, Sun, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { ModeToggle } from '@/components/mode-toggle'
 
 export function Header() {
-  const { theme, setTheme } = useTheme()
   const router = useRouter()
   const { data: session } = authClient.useSession()
 
@@ -20,27 +20,21 @@ export function Header() {
       <div />
 
       <div className="flex items-center gap-3">
-        <button
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label="Toggle theme"
-        >
-          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-        </button>
+        <ModeToggle />
 
         {session?.user && (
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">
               {session.user.email}
             </span>
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={handleSignOut}
-              className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               aria-label="Sign out"
             >
               <LogOut className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         )}
       </div>
