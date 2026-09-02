@@ -20,13 +20,14 @@ The application is built with **Next.js 16 (App Router)**, **React 19**, **Tailw
 
 ## Features
 
+- **✨ Public Marketing Landing Page**: Rich interactive hero, live evaluation scoreboard, telemetry metric bars, and model comparison matrix.
 - **🚀 Evaluation Run Management**: Configure and trigger single or multi-evaluator benchmarks with custom datasets, temperature settings, and model providers.
 - **⚡ Live Execution Polling**: Real-time progress tracking, live status polling, and immediate result visualization for active evaluation runs and distributed jobs.
 - **📊 Granular Test Case Inspection**: Drill down into individual prompt/response pairs, evaluator outputs, token usage, latency metrics, and failure diagnostics.
 - **⚖️ Side-by-Side Model Comparison**: Compare multiple evaluation runs simultaneously to evaluate tradeoffs across accuracy, latency, and cost.
 - **🔍 System & Provider Discovery**: View available LLM providers, registered evaluators, and backend API health from a centralized dashboard.
+- **🎨 Modern Design System**: Built with shadcn/ui primitives, Tailwind CSS v4 design tokens, Google Fonts (Space Grotesk & Fraunces), and accessible theme switching.
 - **🔐 Secure Authentication**: Integrated user registration, login, and session handling powered by Better Auth and PostgreSQL.
-- **🌓 Dark / Light Mode**: Built-in theme toggling with persistent user preference.
 
 ---
 
@@ -100,14 +101,20 @@ npm run lint       # Runs ESLint checks
 
 ```
 src/
-├── app/                  # Next.js App Router (auth route groups & dashboard pages)
-├── components/layout/    # App shell, navigation sidebar, and header
+├── app/                  # Next.js App Router (marketing landing, auth & dashboard pages)
+├── components/
+│   ├── common/           # Shared visual primitives (TicksDivider)
+│   ├── landing/          # Marketing landing page components (Hero, Scoreboard, etc.)
+│   ├── layout/           # App shell, navigation sidebar, and header
+│   ├── ui/               # shadcn UI primitives (Button, Table)
+│   └── mode-toggle.tsx   # Theme switcher
 ├── config/               # Site configuration and navigation metadata
 ├── env.ts                # Runtime type-safe env validation (t3-env)
 ├── lib/
 │   ├── api/              # Centralized apiClient, baseApi, error parsers
 │   ├── auth.ts           # Better Auth server configuration
-│   └── auth-client.ts    # Better Auth client library
+│   ├── auth-client.ts    # Better Auth client library
+│   └── utils.ts          # Class merging utility (cn)
 ├── modules/
 │   ├── runs/             # Run creation, details, results, and query hooks
 │   ├── jobs/             # Distributed jobs management and tracking
@@ -121,10 +128,12 @@ src/
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — System design, C4 context/containers, and data flow
 - [CONTEXT.md](./CONTEXT.md) — Agent and developer mental model, conventions, and invariants
+- [DESIGN.md](./DESIGN.md) — Product & UX design specifications and metric models
 - [Subsystem Architecture](./docs/architecture/) — Project-specific architecture deep-dives
 - [Product Requirements](./docs/prd.md) — User personas, value proposition, and feature scope
 - [Architecture Decisions (ADRs)](./docs/adr/) — Record of architectural decisions and trade-offs
 - [Concepts](./docs/concepts/) — Universal algorithms, scoring theory, and math models
+- [How-To Guides](./docs/how-tos/) — Step-by-step developer implementation recipes
 - [Runbooks](./docs/runbooks/) — Operational guides and troubleshooting steps
 
 ---

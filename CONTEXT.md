@@ -1,13 +1,13 @@
 # CONTEXT.md
 
 > This file provides essential context for AI coding assistants and new contributors. It is intentionally dense — read fully before making changes.  
-> **Last updated:** 2026-08-31
+> **Last updated:** 2026-09-02
 
 ---
 
 ## What this is
 
-EvalBench Frontend is the web interface for the EvalBench AI evaluation and benchmarking platform. It allows AI engineers and developers to configure and trigger model evaluation runs, monitor background execution in real time, inspect per-test-case metrics and outputs, submit distributed benchmark jobs, and compare results across models. It is built as a Next.js 16 App Router application consuming the EvalBench FastAPI REST backend (`/api/v1/*`) with user authentication managed via Better Auth.
+EvalBench Frontend is the web interface for the EvalBench AI evaluation and benchmarking platform. It features a public marketing landing page and an authenticated dashboard that allows AI engineers and developers to configure and trigger model evaluation runs, monitor background execution in real time, inspect per-test-case metrics and outputs, submit distributed benchmark jobs, and compare results across models. It is built as a Next.js 16 App Router application consuming the EvalBench FastAPI REST backend (`/api/v1/*`) with user authentication managed via Better Auth.
 
 ---
 
@@ -18,8 +18,10 @@ EvalBench Frontend is the web interface for the EvalBench AI evaluation and benc
 | **Language** | TypeScript | 5.x | Strict mode enforced |
 | **Framework** | Next.js (App Router) | 16.3.3 | Uses `src/` directory, server actions, route groups |
 | **Runtime** | Node.js | 20 LTS | ES modules |
-| **Styling** | Tailwind CSS | 4.x | PostCSS, `@tailwindcss/postcss`, `cn()` utility |
-| **Icons & UI** | Lucide React | 1.35.0 | Consistent iconography |
+| **Styling** | Tailwind CSS | 4.x | PostCSS, `@tailwindcss/postcss`, `cn()` utility, `tw-animate-css` |
+| **Design System & Primitives** | shadcn/ui & `@base-ui/react` | 4.19.1 / 1.7.0 | Accessible UI primitives, `class-variance-authority`, `components.json` |
+| **Fonts** | Google Fonts (`next/font/google`) | — | Space Grotesk (`--font-heading`), Fraunces (`--font-serif`), Geist Sans/Mono |
+| **Icons** | Lucide React | 1.35.0 | Consistent iconography |
 | **State / Cache** | TanStack Query | 5.102.8 | Caching, polling, mutations, Devtools enabled |
 | **Auth** | Better Auth | 1.7.2 | Server route handler at `/api/auth/[...all]`, React client |
 | **Database** | PostgreSQL (`pg`) | 8.23.0 | Better Auth storage adapter |
@@ -35,8 +37,8 @@ src/
 ├── app/
 │   ├── (auth)/                     - Unauthenticated auth pages (card layout)
 │   │   ├── layout.tsx              - Centered auth card layout
-│   │   ├── login/page.tsx          - Email & password sign-in
-│   │   └── signup/page.tsx         - New user registration
+│   │   ├── login/page.tsx          - Email & password sign-in (using shadcn Button)
+│   │   └── signup/page.tsx         - New user registration (using shadcn Button)
 │   ├── (dashboard)/                - Authenticated dashboard application
 │   │   ├── layout.tsx              - App shell (Sidebar + Header + Main container)
 │   │   ├── dashboard/page.tsx      - Overview: health, recent runs, quick launch
@@ -49,13 +51,17 @@ src/
 │   │   └── settings/page.tsx       - System health, provider & evaluator discovery
 │   ├── api/auth/[...all]/route.ts  - Better Auth catch-all API handler
 │   ├── layout.tsx                  - Root HTML layout (AppProvider, fonts, metadata)
-│   ├── page.tsx                    - Root redirect (`/` -> `/dashboard`)
-│   └── globals.css                 - Global styles and Tailwind configuration
+│   ├── page.tsx                    - Marketing landing page (Hero, Scoreboard, Tracking, Comparison)
+│   └── globals.css                 - Global styles, Tailwind v4 @theme, and shadcn tokens
 ├── components/
-│   └── layout/                     - Shell layout components
-│       ├── sidebar.tsx             - Nav links, current route highlight, collapse
-│       ├── header.tsx              - Top bar with theme toggle & user profile/logout
-│       └── dashboard-layout.tsx    - Composed layout wrapper
+│   ├── common/                     - Shared visual primitives (TicksDivider)
+│   ├── landing/                    - Marketing landing components (Hero, Scoreboard, etc.)
+│   ├── layout/                     - Shell layout components
+│   │   ├── sidebar.tsx             - Nav links, current route highlight, collapse
+│   │   ├── header.tsx              - Top bar with theme toggle & user profile/logout
+│   │   └── dashboard-layout.tsx    - Composed layout wrapper
+│   ├── ui/                         - shadcn UI primitives (Button, Table)
+│   └── mode-toggle.tsx             - Theme switcher component
 ├── config/
 │   └── site.ts                     - App metadata, navigation links, branding
 ├── env.ts                          - Type-safe environment variable schema (t3-env)
@@ -80,6 +86,7 @@ docs/
 ├── architecture/                   - Project-specific architecture docs & subsystem deep-dives
 ├── adr/                            - Architecture Decision Records
 ├── concepts/                       - Universally true, portable concepts and math
+├── how-tos/                        - Step-by-step developer implementation recipes
 ├── runbooks/                       - Operational and developer troubleshooting runbooks
 └── prd.md                          - Product requirements document
 ```
@@ -137,6 +144,7 @@ refetchInterval: (query) => {
 ## Key Invariants
 
 - **Zero Direct Fetch in UI**: Never use `fetch()` or `apiClient` inside UI components or pages. Always go through the module's custom hooks.
+- **Use shadcn Components**: Always use primitives from `@/components/ui/` (e.g. `<Button>`, `<Table>`) instead of crafting raw unstyled HTML controls.
 - **Strict Typing**: No `any` types. All API payloads, parameters, and responses must have explicit TypeScript types defined in `modules/*/types/*.types.ts`.
 - **Environment Validation**: All environment variables must be declared in `src/env.ts` with Zod validation. Never access `process.env` directly in application logic.
 - **CSS Class Merging**: Always use the `cn(...)` utility (`src/lib/utils.ts`) when merging conditional Tailwind classes.
@@ -146,6 +154,7 @@ refetchInterval: (query) => {
 ## What NOT to do
 
 - **Do NOT bypass the hook layer**: Never call `runsApi.createRun(...)` directly from a React component; use `useCreateRun()`.
+- **Do NOT create ad-hoc buttons or form primitives**: Use existing shadcn components in `src/components/ui/`.
 - **Do NOT mutate state without cache invalidation**: Always invalidate or update the relevant TanStack Query keys on mutation success.
 - **Do NOT execute backend inference on the client**: The frontend is strictly a management and visualization UI; all computation happens in FastAPI.
 - **Do NOT store plain text passwords or secrets**: Better Auth handles auth credentials; API secrets must stay in server environment variables.

@@ -1,6 +1,6 @@
 # Architecture — EvalBench Frontend
 
-> **Last updated:** 2026-08-31  
+> **Last updated:** 2026-09-02  
 > **Authors:** EvalBench Engineering Team  
 > **Status:** Current
 
@@ -8,7 +8,7 @@
 
 ## Overview
 
-EvalBench Frontend is a Next.js 16 web application that provides an intuitive graphical interface for the EvalBench AI evaluation and benchmarking platform. It enables AI engineers and developers to configure evaluation runs across diverse LLM providers, monitor asynchronous execution in real time, inspect granular test case outputs and metrics, and compare model benchmarks side-by-side. The frontend interacts directly with the EvalBench FastAPI backend (`/api/v1/*`) and implements user session management via Better Auth.
+EvalBench Frontend is a Next.js 16 web application that provides a comprehensive public landing page and an intuitive graphical dashboard for the EvalBench AI evaluation and benchmarking platform. It enables AI engineers and developers to configure evaluation runs across diverse LLM providers, monitor asynchronous execution in real time, inspect granular test case outputs and metrics, and compare model benchmarks side-by-side. The frontend interacts directly with the EvalBench FastAPI backend (`/api/v1/*`) and implements user session management via Better Auth.
 
 ---
 
@@ -50,7 +50,7 @@ C4Container
   Person(user, "User (Browser)")
   
   Container_Boundary(c1, "EvalBench Frontend (Next.js)") {
-    Container(ui, "Client UI / Pages", "React 19, Tailwind CSS v4, Lucide", "Renders dashboard, runs table, forms, and metric views")
+    Container(ui, "Client UI / Pages", "React 19, Tailwind CSS v4, shadcn/ui, Lucide", "Renders landing page, dashboard, runs table, forms, and metric views")
     Container(query, "TanStack Query Layer", "TanStack React Query v5", "Client state, caching, background polling, mutations")
     Container(auth_server, "Better Auth Server Handlers", "Better Auth, Next.js API Routes", "Handles /api/auth/* endpoints, token validation, session cookies")
     Container(middleware, "Next.js Middleware", "Edge / Node.js Middleware", "Guards (dashboard) routes by inspecting session cookies")
@@ -71,7 +71,7 @@ C4Container
 
 | Container / Module | Technology | Responsibility | Scaling Strategy |
 | :--- | :--- | :--- | :--- |
-| **Next.js Web App** | Next.js 16.3, React 19, TypeScript 5 | Server rendering, client hydration, route middleware, API routes | Horizontally scalable (Vercel / Node.js / Docker) |
+| **Next.js Web App** | Next.js 16.3, React 19, TypeScript 5, shadcn/ui | Server rendering, marketing landing, dashboard, route middleware, API routes | Horizontally scalable (Vercel / Node.js / Docker) |
 | **TanStack Query Layer** | `@tanstack/react-query` v5 | Data fetching, client caching, polling for active runs/jobs, error retry | Client-side memory |
 | **Better Auth Server** | `better-auth` v1.7, `pg` | Authentication endpoints (`/api/auth/[...all]`), session verification | Scaled with Next.js server instance |
 | **EvalBench API Backend** | FastAPI, Python 3.11+ | Running benchmark pipelines against LLM providers & evaluator suites | Independent worker/backend scaling |
@@ -87,6 +87,8 @@ The frontend codebase is structured around a strict 3-Layer Architecture ensurin
 graph TD
   subgraph Presentation Layer
     Pages["Next.js Pages (app/...)"]
+    Landing["Landing Components (components/landing/*)"]
+    UiPrimitives["shadcn UI Primitives (components/ui/*)"]
     Layouts["Layout Components (Sidebar, Header, Shell)"]
     Forms["Forms & Views (Runs, Jobs, Compare, Settings)"]
   end
@@ -235,8 +237,10 @@ sequenceDiagram
 
 - [CONTEXT.md](./CONTEXT.md) — AI context primer, codebase map, invariants, and guidelines
 - [README.md](./README.md) — Quick start and developer setup
+- [DESIGN.md](./DESIGN.md) — Product & UX design specifications and platform metrics
 - [Subsystem Architecture Deep-Dives](./docs/architecture/) — Project-specific subsystem designs and flows
 - [Product Requirements](./docs/prd.md) — Product requirements and user personas
 - [Architecture Decision Records](./docs/adr/) — Historical log of significant architecture choices
 - [Concepts](./docs/concepts/) — Universal algorithms, scoring theory, and math models
+- [How-To Guides](./docs/how-tos/) — Step-by-step developer implementation recipes
 - [Troubleshooting Runbooks](./docs/runbooks/) — Dev and production incident procedures
