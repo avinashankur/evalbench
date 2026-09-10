@@ -3,10 +3,19 @@
 import { useHealth, useProviders, useEvaluators } from '@/modules/discovery'
 import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
 
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+
 export default function SettingsPage() {
-  const { data: health, isLoading: healthLoading } = useHealth()
-  const { data: providersData, isLoading: providersLoading } = useProviders()
-  const { data: evaluatorsData, isLoading: evaluatorsLoading } = useEvaluators()
+  const {
+    data: health,
+    isLoading: healthLoading,
+    isError: healthError,
+    error: healthErrorDetails,
+    refetch: refetchHealth,
+  } = useHealth()
+  const { data: providersData, isLoading: providersLoading, refetch: refetchProviders } = useProviders()
+  const { data: evaluatorsData, isLoading: evaluatorsLoading, refetch: refetchEvaluators } = useEvaluators()
 
   return (
     <div className="space-y-8">
@@ -18,35 +27,61 @@ export default function SettingsPage() {
       </div>
 
       {/* Health */}
-      <section className="rounded-lg border bg-card p-6">
-        <h2 className="mb-4 font-semibold">System Health</h2>
-        {healthLoading ? (
-          <p className="text-sm text-muted-foreground">Checking…</p>
-        ) : health ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-6">
-              <HealthItem label="API" status={health.status === 'ok' ? 'ok' : 'error'} />
-              <HealthItem
-                label="PostgreSQL"
-                status={health.postgres === 'connected' ? 'ok' : 'error'}
-              />
-              <HealthItem
-                label="Redis"
-                status={
-                  health.redis === 'connected'
-                    ? 'ok'
-                    : health.redis === 'disabled'
-                      ? 'disabled'
-                      : 'error'
-                }
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">Version: {health.version}</p>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <div>
+            <CardTitle className="text-base font-semibold">System Health</CardTitle>
+            <CardDescription>Backend API services and database connectivity status</CardDescription>
           </div>
-        ) : (
-          <p className="text-sm text-destructive">Could not fetch health status.</p>
-        )}
-      </section>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetchHealth()}
+            className="h-8 text-xs"
+          >
+            Recheck Health
+          </Button>
+        </CardHeader>
+        <CardContent className="pt-2">
+          {healthLoading ? (
+            <p className="text-sm text-muted-foreground">Checking health status...</p>
+          ) : healthError || !health ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm text-destructive">
+                <XCircle className="h-4 w-4" />
+                <span>Could not fetch health status: {healthErrorDetails?.message || 'Backend unreachable'}</span>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => refetchHealth()}>
+                Retry
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-6">
+                <HealthItem label="API" status={health.status === 'ok' ? 'ok' : 'error'} />
+                <HealthItem
+                  label="PostgreSQL"
+                  status={health.postgres === 'connected' ? 'ok' : 'error'}
+                />
+                <HealthItem
+                  label="Redis"
+                  status={
+                    health.redis === 'connected'
+                      ? 'ok'
+                      : health.redis === 'disabled'
+                        ? 'disabled'
+                        : 'error'
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
+                <span>FastAPI Backend Version: <strong className="text-foreground font-mono">{health.version}</strong></span>
+                <span className="font-mono text-[11px]">Endpoint: /api/v1/health</span>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Providers */}
       <section className="rounded-lg border bg-card p-6">

@@ -5,9 +5,18 @@ import { Play, Layers, Activity, AlertCircle, CheckCircle2, XCircle } from 'luci
 import { useListRuns } from '@/modules/runs'
 import { useHealth } from '@/modules/discovery'
 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+
 export default function DashboardPage() {
   const { data: runsData, isLoading: runsLoading } = useListRuns({ limit: 5 })
-  const { data: health, isLoading: healthLoading } = useHealth()
+  const {
+    data: health,
+    isLoading: healthLoading,
+    isError: healthError,
+    error: healthErrorDetails,
+    refetch: refetchHealth,
+  } = useHealth()
 
   return (
     <div className="space-y-8">
@@ -48,24 +57,66 @@ export default function DashboardPage() {
           <div>
             <p className="font-medium">System Health</p>
             <p className="text-sm text-muted-foreground">
-              {healthLoading ? 'Checking…' : health?.status === 'ok' ? 'All systems go' : 'Issues detected'}
+              {healthLoading
+                ? 'Checking…'
+                : health?.status === 'ok'
+                  ? 'All systems go'
+                  : 'Issues detected'}
             </p>
           </div>
         </Link>
       </div>
 
       {/* Health status */}
-      {!healthLoading && health && (
-        <div className="rounded-lg border bg-card p-4">
-          <h2 className="mb-3 font-semibold">System Status</h2>
-          <div className="flex flex-wrap gap-4">
-            <StatusChip label="API" status={health.status === 'ok' ? 'ok' : 'error'} />
-            <StatusChip label="PostgreSQL" status={health.postgres === 'connected' ? 'ok' : 'error'} />
-            <StatusChip label="Redis" status={health.redis === 'connected' ? 'ok' : health.redis === 'disabled' ? 'disabled' : 'error'} />
-            <span className="text-sm text-muted-foreground">v{health.version}</span>
-          </div>
-        </div>
-      )}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-base font-semibold">System Status</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => refetchHealth()}
+            className="h-7 text-xs text-muted-foreground hover:text-foreground"
+          >
+            Recheck
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {healthLoading ? (
+            <p className="text-sm text-muted-foreground">Checking backend health...</p>
+          ) : healthError || !health ? (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm text-destructive">
+                <XCircle className="h-4 w-4" />
+                <span>Backend service unreachable ({healthErrorDetails?.message || 'Connection refused'})</span>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => refetchHealth()}>
+                Retry
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-4">
+              <StatusChip label="API" status={health.status === 'ok' ? 'ok' : 'error'} />
+              <StatusChip
+                label="PostgreSQL"
+                status={health.postgres === 'connected' ? 'ok' : 'error'}
+              />
+              <StatusChip
+                label="Redis"
+                status={
+                  health.redis === 'connected'
+                    ? 'ok'
+                    : health.redis === 'disabled'
+                      ? 'disabled'
+                      : 'error'
+                }
+              />
+              <span className="ml-auto text-xs font-mono text-muted-foreground">
+                v{health.version}
+              </span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Recent runs */}
       <div className="rounded-lg border bg-card">

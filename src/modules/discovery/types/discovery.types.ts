@@ -2,7 +2,7 @@ export interface HealthResponse {
   status: string
   version: string
   postgres: 'connected' | 'disconnected'
-  redis: 'connected' | 'disabled'
+  redis: 'connected' | 'disconnected' | 'disabled'
 }
 
 export interface ProvidersResponse {
