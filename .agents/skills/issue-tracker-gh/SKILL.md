@@ -1,11 +1,11 @@
 ---
 name: issue-tracker-gh
-description: Create, list, search, modify, close, and delete GitHub issues on the current repository using the gh CLI. Automatically evaluate on every prompt to spot potential bugs, unhandled errors, tech debt, missing tests, or deferred tasks. Also use whenever the user explicitly asks to file a bug, create a task/issue, check open issues, update an issue, or link issues to PRs. Always use this skill instead of running raw gh commands ad hoc.
+description: Create, list, search, modify, close, and delete GitHub issues on the current repository using the gh CLI. Use this skill whenever the user wants to file a bug, create a task/issue, check open issues, find an issue about something, update an issue's title/body/labels/assignees, close an issue, or delete an issue — whether phrased as natural language ("file a bug for the login crash", "what issues are open", "close #42", "assign this to me") or as a slash-style command (/issue create, /issue list, /issue close). Also use this skill when filing an issue about a bug just found in the current code session (it will pull in the relevant file/line context automatically), or when linking an issue to a PR ("close this issue when the PR merges", "what issues does this PR fix"). Always use this skill instead of running raw `gh issue`/`gh pr` commands ad hoc, so duplicate checks, confirmation rules, and formatting stay consistent.
 ---
 
 # Issue Tracker
 
-A skill for managing GitHub issues on the current repository via the `gh` CLI with proactive issue detection on every prompt.
+A skill for managing GitHub issues on the current repository via the `gh` CLI.
 
 ## Scope
 
@@ -16,26 +16,10 @@ A skill for managing GitHub issues on the current repository via the `gh` CLI wi
   ```
   If this fails, tell the user to run `gh auth login` and/or check they're inside a git repo with a GitHub remote. Don't proceed until it succeeds.
 
-## Automatic Evaluation & Trigger Patterns
+## Trigger patterns
 
-### 1. Proactive Auto-Detection (Every Prompt)
-On **every prompt**, actively inspect the conversation and code context for potential issues:
-- **Bugs / Errors**: Unhandled runtime errors, edge-case failures, or regressions identified during discussion/debugging that are not immediately fixed.
-- **Tech Debt / TODOs**: Unresolved `TODO`/`FIXME` comments, deprecated APIs, performance bottlenecks, or code smell discovered in touched files.
-- **Deferred Tasks & Enhancements**: Feature requests, architectural improvements, or follow-up items the user mentions wanting to do later.
-
-When a potential issue is spotted, append a lightweight suggestion at the end of your response:
-```markdown
-> 💡 **Potential Issue Detected**: [1-sentence summary]
-> - **Proposed Title**: `<type>(<scope>): <summary>`
-> - **Labels**: `bug` / `enhancement` / `tech-debt`
-> Would you like me to file this as a GitHub issue?
-```
-
-*Note: Do not suggest issues for trivial typos or things that were completely resolved in the current turn.*
-
-### 2. Explicit User Triggers
-- Natural language: "file a bug for...", "create an issue about...", "what's open right now", "find the issue about the login bug", "close #12", "add the bug label to #7", "assign #9 to me", "delete issue #3", "yes file it", "create that issue"
+Both of these should invoke this skill:
+- Natural language: "file a bug for...", "create an issue about...", "what's open right now", "find the issue about the login bug", "close #12", "add the bug label to #7", "assign #9 to me", "delete issue #3"
 - Slash-style: `/issue create`, `/issue list`, `/issue search`, `/issue edit`, `/issue close`, `/issue delete`
 
 Parse the intent (create/list/search/edit/close/delete) regardless of phrasing style, then follow the matching workflow below.

@@ -1,7 +1,7 @@
 ---
 name: project-docs
 description: >
-  Generate comprehensive project documentation — both Product Documentation (user-facing) and Technical/Engineering Documentation (developer-facing). Use this skill whenever the user wants to write, generate, or improve docs for a project, including: API documentation, Architecture docs (C4 model), ADRs (Architecture Decision Records), README files, Deployment/Infrastructure docs, Runbooks/Playbooks, How-To guides, Concept deep-dives, CONTEXT.md, PRODUCT.md, or any user-facing product guides, feature docs, changelogs, or onboarding content. Also triggers when the user says "document this", "write docs for", "help me write a README", "I need an ADR", "create an architecture diagram", "write a runbook", "document the API", "generate technical documentation", "product docs", "sync docs", "update CONTEXT", "update ARCHITECTURE", "update README.md", "verify docs", or similar. If the user's request touches on any kind of project documentation — even if they don't use those exact words — use this skill.
+  Generate comprehensive technical and engineering documentation for a project. Use this skill whenever the user wants to write, generate, or improve docs for a project, including: API documentation, Architecture docs (C4 model), ADRs (Architecture Decision Records), README files, Runbooks/Playbooks, How-To guides, Concept deep-dives, or CONTEXT.md. Also triggers when the user says "document this", "write docs for", "help me write a README", "I need an ADR", "create an architecture diagram", "write a runbook", "document the API", "generate technical documentation", "sync docs", "update CONTEXT", "update ARCHITECTURE", "update README.md", "verify docs", or similar. If the user's request touches on any kind of project documentation — even if they don't use those exact words — use this skill.
 ---
 
 # Project Documentation Generator
@@ -42,15 +42,12 @@ ARCHITECTURE.md          # Root architecture doc (use template from references/a
 CONTEXT.md               # Root context doc (use template from references/context-md.md)
 README.md                # Root readme (use template from references/readme.md)
 docs/
-├── architecture/        # Project-specific architecture docs & subsystem deep-dives
-│   └── .gitkeep
 ├── adr/                 # Architecture Decision Records
 │   └── .gitkeep
-├── concepts/            # Universal & portable deep-dives, math, and explanations
+├── concepts/            # Deep-dives, math, and explanations
 │   └── .gitkeep
-├── runbooks/            # Incident & troubleshooting playbooks (local dev first, production second)
-│   └── .gitkeep
-└── prd.md               # Product requirements (use template from references/product-md.md)
+└── runbooks/            # Incident & troubleshooting playbooks (local dev first, production second)
+    └── .gitkeep
 ```
 
 The `docs/how-tos/` directory is **optional** — do not create it during scaffold. Only create it when the user writes their first how-to guide.
@@ -59,9 +56,8 @@ The `docs/how-tos/` directory is **optional** — do not create it during scaffo
 
 1. Read the codebase to understand the project's purpose, tech stack, and structure
 2. For ARCHITECTURE.md, CONTEXT.md, and README.md: generate real content based on what exists, not just empty templates. Fill in everything you can infer. Mark sections you cannot fill with `<!-- TODO: fill in -->` comments
-3. For docs/prd.md: use the template from references/product-md.md as a starting point, filling in what you can
-4. Create the empty directories with `.gitkeep` files
-5. After creating everything, tell the user what was created and what sections need their input
+3. Create the empty directories with `.gitkeep` files
+4. After creating everything, tell the user what was created and what sections need their input
 
 ---
 
@@ -73,24 +69,22 @@ This mode runs when the skill is invoked with no arguments in a repo that alread
 
 #### 1. Existence checks
 
-| File/Folder          | Required    | Expected location    |
-| -------------------- | ----------- | -------------------- |
-| `ARCHITECTURE.md`    | Yes         | Repo root            |
-| `CONTEXT.md`         | Yes         | Repo root            |
-| `README.md`          | Yes         | Repo root            |
-| `docs/architecture/` | Yes         | `docs/architecture/` |
-| `docs/adr/`          | Yes         | `docs/adr/`          |
-| `docs/concepts/`     | Yes         | `docs/concepts/`     |
-| `docs/runbooks/`     | Yes         | `docs/runbooks/`     |
-| `docs/prd.md`        | Recommended | `docs/prd.md`        |
+| File/Folder       | Required    | Expected location |
+| ----------------- | ----------- | ----------------- |
+| `ARCHITECTURE.md` | Yes         | Repo root         |
+| `CONTEXT.md`      | Yes         | Repo root         |
+| `README.md`       | Yes         | Repo root         |
+| `docs/adr/`       | Yes         | `docs/adr/`       |
+| `docs/concepts/`  | Yes         | `docs/concepts/`  |
+| `docs/runbooks/`  | Yes         | `docs/runbooks/`  |
 
 #### 2. Placement checks
 
-- Is ARCHITECTURE.md at the repo root? (System overview belongs at the root, not inside `docs/`)
-- Are project-specific architecture docs and subsystem deep-dives inside `docs/architecture/`? Flag any found elsewhere
 - Are all ADRs inside `docs/adr/`? Flag any ADRs found elsewhere
-- Are all universal, portable concept docs inside `docs/concepts/`? Flag any found elsewhere (and flag project-specific docs misplaced in `concepts/`)
+- Are all runbooks inside `docs/runbooks/`? Flag any found elsewhere
+- Are all concept docs inside `docs/concepts/`? Flag any found elsewhere
 - Are how-to guides inside `docs/how-tos/` (if the folder exists)? Flag any found elsewhere
+- Is ARCHITECTURE.md at the repo root? If it's inside `docs/`, flag it — it belongs at the root
 - Is CONTEXT.md at the repo root? If it's inside `docs/`, flag it — it belongs at the root
 - Are there per-module ARCHITECTURE.md files? If so, do they cross-reference the root?
 
@@ -228,7 +222,7 @@ Don't batch these up across multiple sessions. Stale docs compound.
 
 ## Mode: Recommend (suggest next docs to write)
 
-This mode runs when the user invokes the skill with a doc type but no further prompt (e.g., `/project-docs adr`, `/project-docs concepts`, `/project-docs runbook`, `/project-docs how-tos`).
+This mode runs when the user invokes the skill with a doc type but no further prompt (e.g., `/project-docs adr`, `/project-docs concepts`, `/project-docs runbook`, `/project-docs how-tos`, `/project-docs api`).
 
 ### General workflow
 
@@ -251,26 +245,17 @@ This mode runs when the user invokes the skill with a doc type but no further pr
 4. Cross-reference against existing ADRs — don't recommend what's already documented
 5. Recommend the next 1–3 ADRs, with proposed titles following the numbering sequence
 
-#### Project Architecture Deep-Dives (`/project-docs architecture`)
-
-1. Read `ARCHITECTURE.md` and all files in `docs/architecture/`
-2. Identify project-specific subsystems, pipelines, modules, or state machines that lack detailed structural documentation:
-   - Complex component or service lifecycles (e.g. auth flows, polling engines, data synchronization pipelines)
-   - Cross-cutting concerns specific to this project (e.g. custom error pipelines, multi-layer API architectures)
-   - Interactions between frontend modules and backend services
-3. Recommend the next 1–3 project-specific architecture docs to write for `docs/architecture/` (e.g. `001-*.md`).
-
 #### Concepts (`/project-docs concepts`)
 
 1. Read all files in `docs/concepts/`
 2. Identify the current numbering sequence
-3. Scan the codebase for non-trivial, universally true algorithms, data structures, or math:
-   - Theoretical algorithms or scoring functions (e.g. statistical calibration, vector math, token bucket algorithms)
-   - Custom mathematical models that are portable and transferable across projects
-   - Code that references academic papers, blog posts, or generic computer science algorithms
+3. Scan the codebase for non-trivial algorithms, data structures, patterns, or math:
+   - Custom implementations that aren't standard library usage
+   - Complex logic with explanatory comments that could be a full doc
+   - Code that references papers, blog posts, or external algorithms
 4. Check dependency order — if a foundational concept is missing but a dependent one exists, recommend the foundational one first
-5. Verify portability — if an existing concept doc contains project-specific details, flag that it belongs in `docs/architecture/` instead
-6. Recommend the next 1–3 universal concept docs, respecting dependency ordering
+5. Verify portability — if an existing concept doc contains project-specific details, flag it for cleanup
+6. Recommend the next 1–3 concept docs, respecting dependency ordering
 
 #### Runbooks (`/project-docs runbook`)
 
@@ -291,6 +276,18 @@ This mode runs when the user invokes the skill with a doc type but no further pr
    - Developer-facing tasks referenced in README or CONTRIBUTING.md but not documented
    - Common multi-step workflows visible in CI/CD configs or Makefiles
 3. Recommend the next 1–3 how-to guides to write
+
+#### API Docs (`/project-docs api`)
+
+1. Read all files in `docs/api/` (if the folder exists)
+2. Scan the codebase for:
+   - Route definitions, controllers, or handler files with undocumented endpoints
+   - OpenAPI/Swagger specs that exist but have incomplete coverage
+   - Public-facing endpoints with no corresponding API reference
+   - Internal APIs between services or modules with no documented contract
+   - Request/response types or schemas defined in code but not in docs
+3. Cross-reference against any existing API docs or OpenAPI specs — don't recommend what's already covered
+4. Recommend the next 1–3 API docs to write, noting the resource or endpoint group each would cover
 
 ### Recommendation output format
 
@@ -322,11 +319,9 @@ Figure out what document the user needs. Use this priority order:
 
 1. **Explicit**: Did the user name the doc type? ("write a README", "I need an ADR", "generate API docs") → use that.
 2. **Inferrable**: Does the conversation or codebase make it obvious? (they showed you routes → API docs; they're describing a big refactor → ADR) → infer it, state your assumption, and proceed.
-3. **Ambiguous**: Ask — but ask precisely. Don't just say "what kind of docs?". Present the two top-level categories and let them choose:
+3. **Ambiguous**: Ask — but ask precisely. Don't just say "what kind of docs?". List the available types:
 
-> "Before I start — are you looking for **Product Documentation** (user-facing: feature guides, onboarding, how-tos) or **Technical/Engineering Documentation** (developer-facing: API reference, architecture, ADRs, README, runbooks, etc.)?"
->
-> If technical, follow up with the specific type from the list below.
+> "What type of documentation do you need? API reference, architecture, ADR, README, runbook, how-to guide, concept deep-dive, or CONTEXT.md?"
 
 Once you know the doc type, jump straight into the workflow for that type. Don't make the user repeat themselves.
 
@@ -341,7 +336,7 @@ Read existing files the user provides. If they have not provided any, ask for th
 - For Runbook: the system it covers, the failure scenarios, and whether a local development section is needed (default: yes — always include dev first)
 - For How-To: the task, who performs it, how often
 - For Concept: the algorithm/pattern, what code uses it, prerequisite knowledge
-- For CONTEXT.md / PRODUCT.md: anything describing the project's purpose, users, tech
+- For CONTEXT.md: anything describing the project's purpose, users, tech
 
 Then read the type-specific reference file to understand exactly what to ask about.
 
@@ -378,19 +373,16 @@ After writing, proactively call out:
 
 Each type has its own reference file with a detailed template and checklist. Read the relevant reference file before generating content.
 
-| Category  | Doc Type                            | Reference File             |
-| --------- | ----------------------------------- | -------------------------- |
-| Technical | API Documentation                   | references/api-docs.md     |
-| Technical | Architecture & Subsystems (C4)      | references/architecture.md |
-| Technical | ADR — Architecture Decision Record  | references/adr.md          |
-| Technical | README                              | references/readme.md       |
-| Technical | Deployment / Infrastructure Docs    | references/deployment.md   |
-| Technical | Runbook / Playbook                  | references/runbook.md      |
-| Technical | How-To Guide                        | references/how-tos.md      |
-| Technical | Concept Deep-Dive (Universal)       | references/concepts.md     |
-| Technical | CONTEXT.md                          | references/context-md.md   |
-| Technical | PRODUCT.md                          | references/product-md.md   |
-| Product   | Product Documentation (user-facing) | references/product-docs.md |
+| Category  | Doc Type                           | Reference File             |
+| --------- | ---------------------------------- | -------------------------- |
+| Technical | API Documentation                  | references/api-docs.md     |
+| Technical | Architecture Documentation (C4)    | references/architecture.md |
+| Technical | ADR — Architecture Decision Record | references/adr.md          |
+| Technical | README                             | references/readme.md       |
+| Technical | Runbook / Playbook                 | references/runbook.md      |
+| Technical | How-To Guide                       | references/how-tos.md      |
+| Technical | Concept Deep-Dive                  | references/concepts.md     |
+| Technical | CONTEXT.md                         | references/context-md.md   |
 
 Always read the reference file for the chosen doc type before writing anything. The reference contains the exact template, required sections, quality standards, and examples you must follow.
 
@@ -402,29 +394,26 @@ This is the standard docs layout this skill enforces. Use this as the source of 
 
 ```
 <repo-root>/
-├── ARCHITECTURE.md        # System architecture — current state, big picture (C4 Level 1 & 2)
+├── ARCHITECTURE.md        # System architecture — current state, big picture
 ├── CONTEXT.md             # AI/agent context primer — glossary, patterns, invariants
 ├── README.md              # Front door — what is this, how to run it
 │
-├── packages/foo/          # (optional) Per-module architecture docs in monorepos
+├── packages/foo/          # (optional) Per-module architecture docs
 │   └── ARCHITECTURE.md    # Internal structure of this module only
 │
 └── docs/
-    ├── architecture/      # Project-specific architecture docs & subsystem deep-dives (C4 Level 3 & 4)
-    │   ├── 001-api-client-pipeline.md
-    │   └── 002-auth-session-flow.md
     ├── adr/               # Architecture Decision Records (immutable, history of WHY)
     │   ├── 001-use-postgresql.md
     │   └── 002-monorepo-over-polyrepo.md
-    ├── concepts/          # Universally true, portable deep-dives, math, and algorithms (not project-specific)
+    ├── api/               # API reference documentation
+    ├── concepts/          # Deep-dives, math, and explanations (portable, not project-specific)
     │   ├── 001-bloom-filter-sizing.md
     │   └── 002-consistent-hashing.md
     ├── how-tos/           # Actionable dev guides (created on demand, not during scaffold)
     │   ├── how-to-setup-local-ssl.md
     │   └── how-to-run-migrations.md
-    ├── runbooks/          # Incident & troubleshooting playbooks — local dev first, production second
-    │   └── 001-redis-outage.md
-    └── prd.md             # Product requirements document
+    └── runbooks/          # Incident & troubleshooting playbooks — local dev first, production second
+        └── 001-redis-outage.md
 ```
 
 ---
@@ -447,13 +436,10 @@ This is the standard docs layout this skill enforces. Use this as the source of 
 | Architecture | Explanatory, structured     | Medium — enough for a new engineer to orient                                             |
 | ADR          | Concise, decision-focused   | Short — 1-2 pages max                                                                    |
 | README       | Welcoming, scannable        | Short — fits on one screen ideally                                                       |
-| Deployment   | Procedural, exact           | Medium — step-by-step                                                                    |
 | Runbook      | Urgent, action-oriented     | Medium — **local dev section first and detailed**, production section second and generic |
 | How-To       | Imperative, procedural      | Short-medium — one task, nothing else                                                    |
 | Concept      | Explanatory, precise, deep  | Medium-long — as deep as the concept demands                                             |
 | CONTEXT.md   | Dense, factual              | Short — AI/agent context primer                                                          |
-| PRODUCT.md   | Narrative, vision-first     | Medium                                                                                   |
-| Product docs | Friendly, task-focused      | Varies by section                                                                        |
 
 ---
 
@@ -476,10 +462,7 @@ Read these only when they are relevant to the current doc type. Do not load all 
 - references/architecture.md — Architecture documentation, C4 model guide, file placement strategy
 - references/adr.md — ADR template, when to write one, examples
 - references/readme.md — README structure and best practices
-- references/deployment.md — Deployment/infrastructure docs template
 - references/runbook.md — Runbook/Playbook template
 - references/how-tos.md — How-To guide template and writing standards
 - references/concepts.md — Concept deep-dive template, portability rules, numbering
 - references/context-md.md — CONTEXT.md template for AI-assisted projects
-- references/product-md.md — PRODUCT.md template
-- references/product-docs.md — User-facing product documentation guide
