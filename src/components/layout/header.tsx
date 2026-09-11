@@ -1,33 +1,44 @@
 'use client'
 
-import { LogOut } from 'lucide-react'
-import { authClient } from '@/lib/auth-client'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { ModeToggle } from '@/components/mode-toggle'
-
+import { Plus } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { buttonVariants } from '@/components/ui/button'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useHealth } from '@/modules/discovery'
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import { Separator } from '@/components/ui/separator'
 
 export function Header() {
-  const router = useRouter()
-  const { data: session } = authClient.useSession()
+  const pathname = usePathname()
   const { data: health, isLoading: healthLoading, isError: healthError } = useHealth()
-
-  async function handleSignOut() {
-    await authClient.signOut()
-    router.push('/login')
-  }
 
   const isHealthy = !healthLoading && !healthError && health?.status === 'ok'
 
+  const getPageTitle = () => {
+    if (pathname.startsWith('/runs/new')) return 'New Evaluation'
+    if (pathname.startsWith('/runs/')) return 'Run Inspection'
+    if (pathname.startsWith('/runs')) return 'Evaluation Runs'
+    if (pathname.startsWith('/jobs')) return 'Jobs & Queue'
+    if (pathname.startsWith('/compare')) return 'Compare Models'
+    if (pathname.startsWith('/settings')) return 'Settings'
+    return 'Overview'
+  }
+
   return (
-    <header className="flex h-14 items-center justify-between border-b bg-background px-6">
-      <div className="flex items-center gap-2">
+    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center border-b justify-between bg-sidebar/70 px-4 md:px-7 backdrop-blur-sm">
+      <div className="flex items-center gap-3">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-1 data-vertical:h-4" />
+        <span className="font-serif text-lg font-semibold tracking-tight">
+          {getPageTitle()}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-3">
         <Link
           href="/settings"
-          className="flex items-center gap-2 rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="hidden md:flex items-center gap-2 rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           title={
             healthLoading
               ? 'Checking backend health...'
@@ -54,26 +65,14 @@ export function Header() {
                 : 'api degraded'}
           </span>
         </Link>
-      </div>
 
-      <div className="flex items-center gap-3">
-        <ModeToggle />
-
-        {session?.user && (
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">
-              {session.user.email}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={handleSignOut}
-              aria-label="Sign out"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
+        <Link
+          href="/runs/new"
+          className={cn(buttonVariants({ size: 'sm' }), 'hidden sm:inline-flex text-xs font-medium')}
+        >
+          <Plus data-icon="inline-start" />
+          New Evaluation
+        </Link>
       </div>
     </header>
   )
