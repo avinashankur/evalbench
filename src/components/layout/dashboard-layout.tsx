@@ -15,7 +15,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <Sidebar />
       <SidebarInset className="min-h-svh flex flex-col bg-background">
         <Header />
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1500px] w-full mx-auto">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-375 w-full mx-auto">
           {children}
         </main>
       </SidebarInset>
