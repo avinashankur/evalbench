@@ -1,21 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import * as React from 'react'
 import { useCreateJob, useGetJob } from '@/modules/jobs'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { RefreshCw, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { JobSubmitForm, JobTracker } from './_components'
 
 export default function JobsPage() {
-  const [configPath, setConfigPath] = useState('')
+  const [configPath, setConfigPath] = React.useState('')
   const { mutate: submitJob, isPending: isSubmitting, data: submittedJob } = useCreateJob()
-  const [trackingJobId, setTrackingJobId] = useState('')
+  const [trackingJobId, setTrackingJobId] = React.useState('')
   const { data: trackedJob, isLoading: isTracking } = useGetJob(trackingJobId)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!configPath.trim()) return
+
     submitJob(
-      { config_path: configPath },
+      { config_path: configPath.trim() },
       {
         onSuccess(data) {
           setTrackingJobId(data.job_id)
@@ -28,109 +28,29 @@ export default function JobsPage() {
   const jobToShow = trackedJob ?? submittedJob
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Distributed Jobs</h1>
-        <p className="text-muted-foreground">
-          Submit evaluation jobs to the Redis worker queue.
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-bold tracking-tight">Distributed Jobs</h1>
+        <p className="text-xs text-muted-foreground">
+          Submit and track asynchronous evaluation jobs dispatched to the Redis worker queue.
         </p>
       </div>
 
-      {/* Submit form */}
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-card p-6">
-        <h2 className="font-semibold">Submit Job</h2>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Config Path</label>
-          <Input
-            type="text"
-            value={configPath}
-            onChange={(e) => setConfigPath(e.target.value)}
-            placeholder="configs/mmlu.yaml"
-            required
-          />
-          <p className="text-xs text-muted-foreground">
-            Path to a YAML config file on the server.
-          </p>
-        </div>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Submitting…' : 'Submit Job'}
-        </Button>
-      </form>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <JobSubmitForm
+          configPath={configPath}
+          onConfigPathChange={setConfigPath}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+        />
 
-      {/* Job tracker */}
-      <div className="rounded-lg border bg-card p-6">
-        <h2 className="mb-4 font-semibold">Track Job</h2>
-        <div className="mb-4 flex gap-2">
-          <Input
-            type="text"
-            value={trackingJobId}
-            onChange={(e) => setTrackingJobId(e.target.value)}
-            placeholder="Paste a job ID to track…"
-          />
-        </div>
-
-        {isTracking && (
-          <p className="text-sm text-muted-foreground">Loading job status…</p>
-        )}
-
-        {jobToShow && (
-          <div className="space-y-3 rounded-md border p-4">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-sm">{jobToShow.job_id}</span>
-              <JobStatusBadge status={jobToShow.status} />
-            </div>
-            {jobToShow.config_path && (
-              <p className="text-sm text-muted-foreground">
-                Config: {jobToShow.config_path}
-              </p>
-            )}
-            {jobToShow.run_id && (
-              <p className="text-sm">
-                Run ID:{' '}
-                <a href={`/runs/${jobToShow.run_id}`} className="text-primary hover:underline">
-                  {jobToShow.run_id.slice(0, 8)}…
-                </a>
-              </p>
-            )}
-            {jobToShow.error && (
-              <p className="text-sm text-destructive">{jobToShow.error}</p>
-            )}
-          </div>
-        )}
+        <JobTracker
+          trackingJobId={trackingJobId}
+          onTrackingJobIdChange={setTrackingJobId}
+          job={jobToShow}
+          isTracking={isTracking}
+        />
       </div>
     </div>
-  )
-}
-
-function JobStatusBadge({ status }: { status: string }) {
-  const config: Record<string, { icon: React.ElementType; className: string }> = {
-    queued: {
-      icon: Clock,
-      className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-    },
-    running: {
-      icon: RefreshCw,
-      className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    },
-    completed: {
-      icon: CheckCircle2,
-      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-    },
-    failed: {
-      icon: XCircle,
-      className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    },
-  }
-
-  const { icon: Icon, className } = config[status] ?? config.queued
-
-  return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${className}`}>
-      <Icon className={`h-3 w-3 ${status === 'running' ? 'animate-spin' : ''}`} />
-      {status}
-    </span>
   )
 }
