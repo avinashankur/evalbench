@@ -1,179 +1,195 @@
 'use client'
 
-import { useState } from 'react'
+import * as React from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { useCreateRun } from '@/modules/runs'
-import { useProviders, useEvaluators } from '@/modules/discovery'
-import type { RunCreate } from '@/modules/runs'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { useCreateRun, useListRuns, type RunCreate } from '@/modules/runs'
+import { useProviders, useEvaluators, useHealth } from '@/modules/discovery'
+import { ArrowLeft, RotateCcw } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { EvaluationWorkbench } from './_components'
+
+const DEFAULT_DATASET_SUGGESTIONS = ['customer-support-v1', 'inline', 'data/mmlu.jsonl']
 
 export default function NewRunPage() {
   const router = useRouter()
   const { mutate, isPending } = useCreateRun()
+  const { data: health } = useHealth()
   const { data: providersData } = useProviders()
   const { data: evaluatorsData } = useEvaluators()
+  const { data: runsData } = useListRuns({ limit: 50 })
 
-  const [provider, setProvider] = useState('openai')
-  const [model, setModel] = useState('gpt-4o')
-  const [dataset, setDataset] = useState('')
-  const [promptTemplate, setPromptTemplate] = useState('{question}')
-  const [systemPrompt, setSystemPrompt] = useState('')
-  const [concurrency, setConcurrency] = useState(10)
-  const [selectedEvaluators, setSelectedEvaluators] = useState<string[]>(['exact_match'])
+  // Form State
+  const [provider, setProvider] = React.useState('openai')
+  const [model, setModel] = React.useState('gpt-4o')
+  const [dataset, setDataset] = React.useState('')
+  const [promptTemplate, setPromptTemplate] = React.useState('{question}')
+  const [systemPrompt, setSystemPrompt] = React.useState('')
+  const [concurrency, setConcurrency] = React.useState(10)
+  const [temperature, setTemperature] = React.useState(0.7)
+  const [maxTokens, setMaxTokens] = React.useState('')
+  const [selectedEvaluators, setSelectedEvaluators] = React.useState<string[]>([
+    'exact_match',
+    'contains',
+    'latency',
+  ])
+
+  // Discovery data
+  const providers = React.useMemo(() => {
+    if (providersData?.providers && providersData.providers.length > 0) {
+      return providersData.providers
+    }
+    return ['openai', 'anthropic', 'gemini', 'mock']
+  }, [providersData?.providers])
+
+  const evaluators = React.useMemo(() => {
+    if (evaluatorsData?.evaluators && evaluatorsData.evaluators.length > 0) {
+      return evaluatorsData.evaluators
+    }
+    return ['exact_match', 'contains', 'llm_judge', 'latency', 'token_usage']
+  }, [evaluatorsData?.evaluators])
+
+  // Suggested datasets from DB runs + default fallbacks
+  const datasetSuggestions = React.useMemo(() => {
+    const fromRuns = runsData?.runs?.map((r) => r.dataset_name) ?? []
+    return Array.from(new Set([...fromRuns, ...DEFAULT_DATASET_SUGGESTIONS]))
+  }, [runsData?.runs])
+
+  // Evaluator selection handlers
+  function handleToggleEvaluator(name: string) {
+    setSelectedEvaluators((prev) =>
+      prev.includes(name) ? prev.filter((e) => e !== name) : [...prev, name]
+    )
+  }
+
+  function handleSelectAllEvaluators() {
+    setSelectedEvaluators([...evaluators])
+  }
+
+  function handleClearEvaluators() {
+    setSelectedEvaluators([])
+  }
+
+  function handleSelectRecommended() {
+    setSelectedEvaluators(
+      ['exact_match', 'contains', 'latency'].filter((e) => evaluators.includes(e))
+    )
+  }
+
+  function handleResetDefaults() {
+    setProvider('openai')
+    setModel('gpt-4o')
+    setDataset('')
+    setPromptTemplate('{question}')
+    setSystemPrompt('')
+    setConcurrency(10)
+    setTemperature(0.7)
+    setMaxTokens('')
+    setSelectedEvaluators(['exact_match', 'contains', 'latency'])
+  }
+
+  const isValid = Boolean(dataset.trim() && model.trim() && selectedEvaluators.length > 0)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!isValid || isPending) return
 
-    const body: RunCreate = {
-      dataset: dataset,
+    const payload: RunCreate = {
+      dataset: dataset.trim(),
       model: {
         provider,
-        name: model,
+        name: model.trim(),
+        temperature,
+        max_tokens: maxTokens ? parseInt(maxTokens, 10) : undefined,
       },
-      prompt_template: promptTemplate,
-      system_prompt: systemPrompt || undefined,
+      prompt_template: promptTemplate.trim() || '{question}',
+      system_prompt: systemPrompt.trim() || undefined,
       concurrency,
       evaluators: selectedEvaluators,
     }
 
-    mutate(body, {
+    mutate(payload, {
       onSuccess(data) {
         router.push(`/runs/${data.run_id}`)
       },
     })
   }
 
-  function toggleEvaluator(name: string) {
-    setSelectedEvaluators((prev) =>
-      prev.includes(name) ? prev.filter((e) => e !== name) : [...prev, name],
-    )
-  }
-
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex items-center gap-3">
-        <Link href="/runs" className="rounded-md p-1 hover:bg-muted">
-          <ArrowLeft className="h-5 w-5" />
+    <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full">
+      {/* Top Navigation & Status Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+        <Link
+          href="/runs"
+          className={cn(
+            buttonVariants({ variant: 'ghost', size: 'xs' }),
+            'group text-xs text-muted-foreground hover:text-foreground gap-1.5 -ml-2'
+          )}
+        >
+          <ArrowLeft
+            className="size-3.5 transition-transform duration-200 group-hover:-translate-x-0.5"
+            data-icon="inline-start"
+          />
+          Back to Evaluation Runs
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold">New Evaluation Run</h1>
-          <p className="text-muted-foreground">Configure and start an evaluation.</p>
+
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="font-mono text-[11px] gap-1.5 py-0.5">
+            <span
+              className={cn(
+                'size-1.5 rounded-full',
+                health?.status === 'ok' ? 'bg-emerald-500' : 'bg-amber-500'
+              )}
+            />
+            <span>{health?.status === 'ok' ? 'API Connected' : 'Checking API...'}</span>
+          </Badge>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            onClick={handleResetDefaults}
+            className="text-xs text-muted-foreground hover:text-foreground gap-1"
+          >
+            <RotateCcw className="size-3" data-icon="inline-start" />
+            Reset
+          </Button>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border bg-card p-6">
-        {/* Model config */}
-        <fieldset className="space-y-4">
-          <legend className="text-sm font-semibold">Model</legend>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Provider</label>
-              <select
-                value={provider}
-                onChange={(e) => setProvider(e.target.value)}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-              >
-                {providersData?.providers.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                )) ?? <option value="openai">openai</option>}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Model Name</label>
-              <Input
-                type="text"
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                placeholder="gpt-4o"
-                required
-              />
-            </div>
-          </div>
-        </fieldset>
-
-        {/* Dataset */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Dataset Path</label>
-          <Input
-            type="text"
-            value={dataset}
-            onChange={(e) => setDataset(e.target.value)}
-            placeholder="path/to/dataset.jsonl"
-            required
-          />
-          <p className="text-xs text-muted-foreground">
-            Path to a JSONL dataset file on the server.
-          </p>
-        </div>
-
-        {/* Prompt */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Prompt Template</label>
-          <Input
-            type="text"
-            value={promptTemplate}
-            onChange={(e) => setPromptTemplate(e.target.value)}
-            className="font-mono"
-            placeholder="{question}"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">System Prompt (optional)</label>
-          <textarea
-            value={systemPrompt}
-            onChange={(e) => setSystemPrompt(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 outline-none"
-            rows={3}
-            placeholder="You are a helpful assistant."
-          />
-        </div>
-
-        {/* Concurrency */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Concurrency</label>
-          <Input
-            type="number"
-            value={concurrency}
-            onChange={(e) => setConcurrency(Number(e.target.value))}
-            className="w-24"
-            min={1}
-            max={100}
-          />
-        </div>
-
-        {/* Evaluators */}
-        <fieldset className="space-y-3">
-          <legend className="text-sm font-semibold">Evaluators</legend>
-          <div className="flex flex-wrap gap-2">
-            {(evaluatorsData?.evaluators ?? ['exact_match', 'contains', 'llm_judge']).map(
-              (name) => (
-                <Button
-                  key={name}
-                  type="button"
-                  size="sm"
-                  variant={selectedEvaluators.includes(name) ? 'default' : 'outline'}
-                  onClick={() => toggleEvaluator(name)}
-                >
-                  {name}
-                </Button>
-              ),
-            )}
-          </div>
-        </fieldset>
-
-        <Button
-          type="submit"
-          disabled={isPending}
-          className="w-full"
-        >
-          {isPending ? 'Starting evaluation…' : 'Start Evaluation'}
-        </Button>
+      {/* Main Cardless Linear/Vercel-style Studio Form */}
+      <form onSubmit={handleSubmit}>
+        <EvaluationWorkbench
+          providers={providers}
+          provider={provider}
+          onProviderChange={setProvider}
+          model={model}
+          onModelChange={setModel}
+          dataset={dataset}
+          onDatasetChange={setDataset}
+          suggestedDatasets={datasetSuggestions}
+          promptTemplate={promptTemplate}
+          onPromptTemplateChange={setPromptTemplate}
+          systemPrompt={systemPrompt}
+          onSystemPromptChange={setSystemPrompt}
+          concurrency={concurrency}
+          onConcurrencyChange={setConcurrency}
+          temperature={temperature}
+          onTemperatureChange={setTemperature}
+          maxTokens={maxTokens}
+          onMaxTokensChange={setMaxTokens}
+          availableEvaluators={evaluators}
+          selectedEvaluators={selectedEvaluators}
+          onEvaluatorsChange={setSelectedEvaluators}
+          onSelectAllEvaluators={handleSelectAllEvaluators}
+          onClearEvaluators={handleClearEvaluators}
+          onSelectRecommendedEvaluators={handleSelectRecommended}
+          onSubmit={handleSubmit}
+          isPending={isPending}
+          isValid={isValid}
+        />
       </form>
     </div>
   )
