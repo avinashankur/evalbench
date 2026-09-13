@@ -129,3 +129,93 @@
     @apply font-sans;
   }
 }
+
+/* ==========================================================================
+   Sonner Toast: Simple, Clean Notification Card (Top-Center)
+   ========================================================================== */
+
+:root {
+  --toast-bg: #ffffff;
+  --toast-border: #e4e4e7;
+  --toast-text: #09090b;
+  --toast-muted: #71717a;
+  --toast-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.dark {
+  --toast-bg: #18181b;
+  --toast-border: #27272a;
+  --toast-text: #fafafa;
+  --toast-muted: #a1a1aa;
+  --toast-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 4px 10px -4px rgba(0, 0, 0, 0.3);
+}
+
+[data-sonner-toaster] {
+  --normal-bg: var(--toast-bg) !important;
+  --normal-border: var(--toast-border) !important;
+  --normal-text: var(--toast-text) !important;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif !important;
+}
+
+[data-sonner-toaster][data-sonner-theme='dark'] {
+  --normal-bg: #18181b !important;
+  --normal-border: #27272a !important;
+  --normal-text: #fafafa !important;
+}
+
+[data-sonner-toaster][data-sonner-theme='light'] {
+  --normal-bg: #ffffff !important;
+  --normal-border: #e4e4e7 !important;
+  --normal-text: #09090b !important;
+}
+
+[data-sonner-toast][data-styled='true'] {
+  background-color: var(--normal-bg, #18181b) !important;
+  border: 1px solid var(--normal-border, #27272a) !important;
+  color: var(--normal-text, #fafafa) !important;
+  border-radius: 8px !important;
+  padding: 12px 14px !important;
+  box-shadow: var(--toast-shadow) !important;
+  width: 356px !important;
+  gap: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+[data-sonner-toast]:has([data-description]) {
+  align-items: flex-start !important;
+}
+
+[data-sonner-toast] [data-content] {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  flex: 1 1 auto !important;
+}
+
+[data-sonner-toast] [data-title] {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  color: inherit !important;
+}
+
+[data-sonner-toast] [data-description] {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  color: var(--toast-muted) !important;
+  line-height: 1.4 !important;
+}
+
+[data-sonner-toast] [data-close-button] {
+  background: transparent !important;
+  border: none !important;
+  color: var(--toast-muted) !important;
+  border-radius: 4px !important;
+  transition: color 0.15s ease, background 0.15s ease !important;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--toast-text) !important;
+}
