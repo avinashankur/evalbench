@@ -16,3 +16,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 # General
 - If making an API call to the backend, make sure to read @docs/architecture/001-api-client-usage.md
 - use shadcn components everywhere possible instead of making components from sratch
+
+# UI & Visual Hierarchy Guidelines
+- **Sheet / Slide-over Drawers (Clean Monochrome - Linear/Vercel style)**:
+  - Sheet container: Elevated solid `bg-card` with `border-l border-border shadow-2xl` (separates cleanly from the underlying page without muddy colors or transparency).
+  - Sheet header: Clean `bg-card border-b border-border/70 space-y-1.5`.
+  - Inner content tiles: Soft, calm `bg-muted/50` or `bg-muted/40` blocks with subtle `border border-border/60 rounded-xl p-4`.
+  - Evaluations section: Use neutral borders (`border border-border/60 bg-muted/40`), never loud red or green borders around whole cards. Indicate failures clearly with red status badges/icons (`XCircle`) and passes with emerald (`CheckCircle2`) so issues stand out immediately without cluttering the card outline.
+  - Never use slash opacity on the sheet container itself (e.g. `bg-muted/40` makes the drawer transparent so elements underneath bleed through).

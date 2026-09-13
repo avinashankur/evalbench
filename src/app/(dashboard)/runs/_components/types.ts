@@ -1,4 +1,4 @@
-import type { RunSummary } from '@/modules/runs'
+import type { RunSummary, RunMetrics } from '@/modules/runs'
 
 export type SortOption = 'newest' | 'oldest' | 'score' | 'latency' | 'cases'
 
@@ -10,7 +10,7 @@ export const SORT_LABELS: Record<SortOption, string> = {
   cases: 'Most Test Cases',
 }
 
-export function computeRunScore(run: RunSummary): {
+export function computeRunScore(run: { metrics: RunMetrics }): {
   scoreDisplay: string
   scorePercent: number | null
 } {

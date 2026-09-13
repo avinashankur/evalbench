@@ -98,11 +98,11 @@ export function JobInspectorSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-lg p-0 flex flex-col justify-between overflow-hidden backdrop-blur-sm"
+        className="w-full sm:max-w-lg p-0 flex flex-col justify-between overflow-hidden bg-card border-l border-border shadow-2xl"
       >
         <div className="flex flex-col h-full overflow-hidden">
           {/* Header */}
-          <SheetHeader className="p-5 pb-3 border-b border-border/60 bg-muted/20 flex flex-col gap-2.5">
+          <SheetHeader className="p-5 pb-3 border-b border-border/70 bg-card flex flex-col gap-2.5">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <span className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0">
