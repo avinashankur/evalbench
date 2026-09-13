@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Plus, Search, Play } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { RunDetailDrawer } from '@/components/dashboard/run-detail-drawer'
+import { RunDetailDrawer } from '@/app/(dashboard)/dashboard/_components'
 import { useListRuns, useDeleteRun, type RunSummary } from '@/modules/runs'
 import { cn } from '@/lib/utils'
 import {

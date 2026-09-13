@@ -7,10 +7,12 @@ import { useHealth, useProviders, useEvaluators } from '@/modules/discovery'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { PerformanceChart } from '@/components/dashboard/performance-chart'
-import { ModelLeaderboard } from '@/components/dashboard/model-leaderboard'
-import { RecentEvaluationsTable } from '@/components/dashboard/recent-evaluations-table'
-import { WorkspaceSignal } from '@/components/dashboard/workspace-signal'
+import {
+  PerformanceChart,
+  ModelLeaderboard,
+  RecentEvaluationsTable,
+  WorkspaceSignal,
+} from './_components'
 
 export default function DashboardPage() {
   const {
@@ -153,15 +155,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 text-muted-foreground font-mono text-[11px]">
-            <span
-              className={cn(
-                'size-2 rounded-full',
-                health?.status === 'ok' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-              )}
-            />
-            <span>FastAPI v{health?.version || '0.1.0'} · Live telemetry</span>
-          </div>
 
           <Button
             variant="outline"
