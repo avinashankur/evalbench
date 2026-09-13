@@ -1,143 +1,157 @@
 'use client'
 
-import { useState } from 'react'
+import * as React from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useListRuns } from '@/modules/runs'
 import type { RunSummary } from '@/modules/runs'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  CompareHeader,
+  RunSelectorPanel,
+  MetricsComparisonTable,
+  HeadToHeadBreakdown,
+  CompareEmptyState,
+} from './_components'
 
-export default function ComparePage() {
-  const { data, isLoading } = useListRuns()
-  const [selected, setSelected] = useState<string[]>([])
+function CompareContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
 
-  function toggleRun(runId: string) {
-    setSelected((prev) =>
-      prev.includes(runId) ? prev.filter((id) => id !== runId) : [...prev, runId],
-    )
+  const { data, isLoading } = useListRuns({ limit: 100 })
+  const allRuns: RunSummary[] = data?.runs ?? []
+
+  // Initialize selected runs from URL
+  const selectedFromUrl = React.useMemo(() => {
+    const runsParam = searchParams.get('runs')
+    if (runsParam) {
+      return runsParam.split(',').filter(Boolean)
+    }
+    const r1 = searchParams.get('run1')
+    const r2 = searchParams.get('run2')
+    return [r1, r2].filter((id): id is string => Boolean(id))
+  }, [searchParams])
+
+  const [selectedIds, setSelectedIds] = React.useState<string[]>(selectedFromUrl)
+
+  // Keep state and URL in sync
+  React.useEffect(() => {
+    setSelectedIds(selectedFromUrl)
+  }, [selectedFromUrl])
+
+  const updateUrl = React.useCallback(
+    (newIds: string[]) => {
+      setSelectedIds(newIds)
+      const params = new URLSearchParams()
+      if (newIds.length > 0) {
+        params.set('runs', newIds.join(','))
+      }
+      const qs = params.toString()
+      router.replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false })
+    },
+    [router, pathname]
+  )
+
+  function handleToggleRun(runId: string) {
+    const next = selectedIds.includes(runId)
+      ? selectedIds.filter((id) => id !== runId)
+      : [...selectedIds, runId]
+    updateUrl(next)
   }
 
-  const selectedRuns: RunSummary[] =
-    data?.runs.filter((r) => selected.includes(r.run_id)) ?? []
+  function handleRemoveRun(runId: string) {
+    updateUrl(selectedIds.filter((id) => id !== runId))
+  }
 
-  const allEvaluatorNames = [
-    ...new Set(selectedRuns.flatMap((r) => Object.keys(r.metrics.pass_rates))),
-  ]
+  function handleClearAll() {
+    updateUrl([])
+  }
+
+  function handleSelectMultiple(runIds: string[]) {
+    updateUrl(runIds)
+  }
+
+  function handleSwapRuns() {
+    if (selectedIds.length === 2) {
+      updateUrl([selectedIds[1], selectedIds[0]])
+    }
+  }
+
+  // Preserve the user's selected ordering (selectedIds[0] is Baseline)
+  const selectedRuns: RunSummary[] = React.useMemo(() => {
+    const map = new Map<string, RunSummary>()
+    allRuns.forEach((r) => map.set(r.run_id, r))
+    return selectedIds
+      .map((id) => map.get(id))
+      .filter((r): r is RunSummary => Boolean(r))
+  }, [allRuns, selectedIds])
+
+  // Check if exactly 2 runs are selected on the same dataset
+  const canShowHeadToHead =
+    selectedRuns.length === 2 &&
+    selectedRuns[0].dataset_name === selectedRuns[1].dataset_name
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Compare Runs</h1>
-        <p className="text-muted-foreground">
-          Select runs to compare their metrics side by side.
-        </p>
-      </div>
+    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-16">
+      {/* Header & Selected Chips */}
+      <CompareHeader
+        selectedRuns={selectedRuns}
+        onRemoveRun={handleRemoveRun}
+        onClearAll={handleClearAll}
+        onSwapRuns={selectedRuns.length === 2 ? handleSwapRuns : undefined}
+      />
 
-      {/* Run selector */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Select Runs</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          ) : (
-            <div className="max-h-60 space-y-1 overflow-y-auto">
-              {data?.runs.map((run) => (
-                <label
-                  key={run.run_id}
-                  className="flex cursor-pointer items-center gap-3 rounded-md p-2 hover:bg-muted/50"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(run.run_id)}
-                    onChange={() => toggleRun(run.run_id)}
-                    className="rounded border"
-                  />
-                  <span className="text-sm">
-                    {run.dataset_name} — {run.provider}/{run.model}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(run.created_at).toLocaleDateString()}
-                  </span>
-                </label>
-              ))}
-            </div>
+      {/* Run Selector Accordion / Panel */}
+      <RunSelectorPanel
+        allRuns={allRuns}
+        selectedIds={selectedIds}
+        isLoading={isLoading}
+        onToggleRun={handleToggleRun}
+        onSelectMultiple={handleSelectMultiple}
+      />
+
+      {/* Comparison Views */}
+      {selectedRuns.length >= 2 ? (
+        <div className="space-y-8">
+          {/* 1. Multi-run Metrics Matrix & Winner Highlights */}
+          <MetricsComparisonTable selectedRuns={selectedRuns} />
+
+          {/* 2. Head-to-Head Test Case Breakdown (If 2 runs on same dataset) */}
+          {canShowHeadToHead && (
+            <HeadToHeadBreakdown
+              runA={selectedRuns[0]}
+              runB={selectedRuns[1]}
+            />
           )}
-        </CardContent>
-      </Card>
-
-      {/* Comparison table */}
-      {selectedRuns.length >= 2 && (
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="px-4 py-3 text-left font-medium">Metric</TableHead>
-                {selectedRuns.map((r) => (
-                  <TableHead key={r.run_id} className="px-4 py-3 text-right font-medium">
-                    {r.dataset_name}
-                    <br />
-                    <span className="font-normal text-muted-foreground">
-                      {r.provider}/{r.model}
-                    </span>
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell className="px-4 py-3 font-medium">Test Cases</TableCell>
-                {selectedRuns.map((r) => (
-                  <TableCell key={r.run_id} className="px-4 py-3 text-right font-mono">
-                    {r.total_test_cases}
-                  </TableCell>
-                ))}
-              </TableRow>
-              <TableRow>
-                <TableCell className="px-4 py-3 font-medium">Avg Latency</TableCell>
-                {selectedRuns.map((r) => (
-                  <TableCell key={r.run_id} className="px-4 py-3 text-right font-mono">
-                    {r.metrics.mean_latency_ms.toFixed(0)}ms
-                  </TableCell>
-                ))}
-              </TableRow>
-              <TableRow>
-                <TableCell className="px-4 py-3 font-medium">Total Cost</TableCell>
-                {selectedRuns.map((r) => (
-                  <TableCell key={r.run_id} className="px-4 py-3 text-right font-mono">
-                    ${r.metrics.total_cost_usd.toFixed(4)}
-                  </TableCell>
-                ))}
-              </TableRow>
-              {allEvaluatorNames.map((name) => (
-                <TableRow key={name}>
-                  <TableCell className="px-4 py-3 font-medium">{name} (pass rate)</TableCell>
-                  {selectedRuns.map((r) => (
-                    <TableCell key={r.run_id} className="px-4 py-3 text-right font-mono">
-                      {r.metrics.pass_rates[name] != null
-                        ? `${(r.metrics.pass_rates[name] * 100).toFixed(1)}%`
-                        : '—'}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
         </div>
-      )}
-
-      {selectedRuns.length === 1 && (
-        <p className="text-sm text-muted-foreground">
-          Select at least 2 runs to compare.
-        </p>
+      ) : (
+        <CompareEmptyState
+          selectedCount={selectedRuns.length}
+          allRuns={allRuns}
+          onSelectRecent={handleSelectMultiple}
+        />
       )}
     </div>
+  )
+}
+
+function CompareSkeleton() {
+  return (
+    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-16">
+      <div className="space-y-2">
+        <Skeleton className="h-7 w-48 rounded-md" />
+        <Skeleton className="h-4 w-96 rounded-md" />
+      </div>
+      <Skeleton className="h-32 w-full rounded-xl" />
+      <Skeleton className="h-64 w-full rounded-xl" />
+    </div>
+  )
+}
+
+export default function ComparePage() {
+  return (
+    <React.Suspense fallback={<CompareSkeleton />}>
+      <CompareContent />
+    </React.Suspense>
   )
 }
