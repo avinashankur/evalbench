@@ -1,144 +1,129 @@
 'use client'
 
-import { useHealth, useProviders, useEvaluators } from '@/modules/discovery'
-import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
+import * as React from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
+import { Activity, Cpu, Scale, Sliders, User } from 'lucide-react'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  SystemHealthPanel,
+  ProvidersCatalogPanel,
+  EvaluatorsCatalogPanel,
+  PreferencesPanel,
+  AccountPanel,
+} from './_components'
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+const VALID_TABS = ['system', 'providers', 'evaluators', 'preferences', 'account'] as const
+type SettingsTab = (typeof VALID_TABS)[number]
 
-export default function SettingsPage() {
-  const {
-    data: health,
-    isLoading: healthLoading,
-    isError: healthError,
-    error: healthErrorDetails,
-    refetch: refetchHealth,
-  } = useHealth()
-  const { data: providersData, isLoading: providersLoading, refetch: refetchProviders } = useProviders()
-  const { data: evaluatorsData, isLoading: evaluatorsLoading, refetch: refetchEvaluators } = useEvaluators()
+function SettingsContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const tabParam = searchParams.get('tab') as SettingsTab | null
+  const initialTab: SettingsTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'system'
+
+  const [activeTab, setActiveTab] = React.useState<string>(initialTab)
+
+  React.useEffect(() => {
+    if (tabParam && VALID_TABS.includes(tabParam)) {
+      setActiveTab(tabParam)
+    }
+  }, [tabParam])
+
+  function handleTabChange(value: string) {
+    setActiveTab(value)
+    const params = new URLSearchParams()
+    if (value !== 'system') {
+      params.set('tab', value)
+    }
+    const qs = params.toString()
+    router.replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false })
+  }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Settings & Discovery</h1>
-        <p className="text-muted-foreground">
-          System health, available providers, and evaluators.
-        </p>
-      </div>
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 pb-16">
+      {/* Header */}
+      <p className="text-xs text-muted-foreground">
+        System telemetry, model providers, evaluator rubrics, and platform preferences.
+      </p>
 
-      {/* Health */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <div>
-            <CardTitle className="text-base font-semibold">System Health</CardTitle>
-            <CardDescription>Backend API services and database connectivity status</CardDescription>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetchHealth()}
-            className="h-8 text-xs"
-          >
-            Recheck Health
-          </Button>
-        </CardHeader>
-        <CardContent className="pt-2">
-          {healthLoading ? (
-            <p className="text-sm text-muted-foreground">Checking health status...</p>
-          ) : healthError || !health ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm text-destructive">
-                <XCircle className="h-4 w-4" />
-                <span>Could not fetch health status: {healthErrorDetails?.message || 'Backend unreachable'}</span>
-              </div>
-              <Button size="sm" variant="outline" onClick={() => refetchHealth()}>
-                Retry
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-6">
-                <HealthItem label="API" status={health.status === 'ok' ? 'ok' : 'error'} />
-                <HealthItem
-                  label="PostgreSQL"
-                  status={health.postgres === 'connected' ? 'ok' : 'error'}
-                />
-                <HealthItem
-                  label="Redis"
-                  status={
-                    health.redis === 'connected'
-                      ? 'ok'
-                      : health.redis === 'disabled'
-                        ? 'disabled'
-                        : 'error'
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
-                <span>FastAPI Backend Version: <strong className="text-foreground font-mono">{health.version}</strong></span>
-                <span className="font-mono text-[11px]">Endpoint: /api/v1/health</span>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Settings Navigation Tabs */}
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-6">
+        <TabsList className="flex h-9 max-w-full flex-wrap rounded-lg border border-border/50 bg-muted/70 p-1">
+          <TabsTrigger value="system" className="cursor-pointer gap-1.5 text-xs font-medium">
+            <Activity className="size-3.5" />
+            <span>System Health</span>
+          </TabsTrigger>
 
-      {/* Providers */}
-      <section className="rounded-lg border bg-card p-6">
-        <h2 className="mb-4 font-semibold">LLM Providers</h2>
-        {providersLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
-        ) : providersData ? (
-          <div className="flex flex-wrap gap-2">
-            {providersData.providers.map((p) => (
-              <span
-                key={p}
-                className="rounded-md border bg-muted/50 px-3 py-1.5 text-sm font-medium"
-              >
-                {p}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">No providers available.</p>
-        )}
-      </section>
+          <TabsTrigger value="providers" className="cursor-pointer gap-1.5 text-xs font-medium">
+            <Cpu className="size-3.5" />
+            <span>LLM Providers</span>
+          </TabsTrigger>
 
-      {/* Evaluators */}
-      <section className="rounded-lg border bg-card p-6">
-        <h2 className="mb-4 font-semibold">Evaluators</h2>
-        {evaluatorsLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
-        ) : evaluatorsData ? (
-          <div className="flex flex-wrap gap-2">
-            {evaluatorsData.evaluators.map((e) => (
-              <span
-                key={e}
-                className="rounded-md border bg-muted/50 px-3 py-1.5 text-sm font-medium"
-              >
-                {e}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">No evaluators available.</p>
-        )}
-      </section>
+          <TabsTrigger value="evaluators" className="cursor-pointer gap-1.5 text-xs font-medium">
+            <Scale className="size-3.5" />
+            <span>Evaluator Rubrics</span>
+          </TabsTrigger>
+
+          <TabsTrigger value="preferences" className="cursor-pointer gap-1.5 text-xs font-medium">
+            <Sliders className="size-3.5" />
+            <span>Preferences</span>
+          </TabsTrigger>
+
+          <TabsTrigger value="account" className="cursor-pointer gap-1.5 text-xs font-medium">
+            <User className="size-3.5" />
+            <span>Account</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="system" className="m-0 outline-none">
+          <SystemHealthPanel />
+        </TabsContent>
+
+        <TabsContent value="providers" className="m-0 outline-none">
+          <ProvidersCatalogPanel />
+        </TabsContent>
+
+        <TabsContent value="evaluators" className="m-0 outline-none">
+          <EvaluatorsCatalogPanel />
+        </TabsContent>
+
+        <TabsContent value="preferences" className="m-0 outline-none">
+          <PreferencesPanel />
+        </TabsContent>
+
+        <TabsContent value="account" className="m-0 outline-none">
+          <AccountPanel />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
 
-function HealthItem({ label, status }: { label: string; status: 'ok' | 'error' | 'disabled' }) {
+function SettingsSkeleton() {
   return (
-    <div className="flex items-center gap-2">
-      {status === 'ok' ? (
-        <CheckCircle2 className="h-5 w-5 text-green-500" />
-      ) : status === 'error' ? (
-        <XCircle className="h-5 w-5 text-red-500" />
-      ) : (
-        <AlertCircle className="h-5 w-5 text-yellow-500" />
-      )}
-      <span className="text-sm font-medium">{label}</span>
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 pb-16">
+      <div className="space-y-2">
+        <Skeleton className="h-7 w-48 rounded-md" />
+        <Skeleton className="h-4 w-80 rounded-md" />
+      </div>
+      <Skeleton className="h-10 w-96 rounded-lg" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Skeleton className="h-28 w-full rounded-xl" />
+        <Skeleton className="h-28 w-full rounded-xl" />
+        <Skeleton className="h-28 w-full rounded-xl" />
+      </div>
+      <Skeleton className="h-64 w-full rounded-xl" />
     </div>
+  )
+}
+
+export default function SettingsPage() {
+  return (
+    <React.Suspense fallback={<SettingsSkeleton />}>
+      <SettingsContent />
+    </React.Suspense>
   )
 }
