@@ -187,7 +187,7 @@ export default function JobsPage() {
               <span className="font-semibold text-foreground">
                 {jobToShow.status === 'running' ? 'Evaluation in progress' : 'Job waiting in queue'}:
               </span>
-              <code className="font-mono text-muted-foreground truncate max-w-[140px] sm:max-w-[220px]">
+              <code className="font-mono text-muted-foreground truncate max-w-35 sm:max-w-55">
                 {jobToShow.job_id}
               </code>
               <JobStatusBadge status={jobToShow.status} />

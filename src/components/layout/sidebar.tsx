@@ -134,7 +134,7 @@ export function Sidebar({ ...props }: React.ComponentProps<typeof SidebarContain
               className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 overflow-hidden rounded-lg p-1.5 text-left transition-colors outline-none group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="User account menu"
             >
-              <Avatar className="size-8 shrink-0">
+              <Avatar className="size-7 shrink-0">
                 <AvatarFallback className="text-xs font-semibold text-primary">
                   {userInitial}
                 </AvatarFallback>
