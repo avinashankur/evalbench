@@ -455,7 +455,7 @@ export function EvaluationWorkbench({
       </div>
 
       {/* Floating Bottom Sticky Action Dock */}
-      <div className="sticky bottom-4 z-20 rounded-xl border border-border/80 bg-background/70 backdrop-blur-md p-4 shadow-lg flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="sticky bottom-4 z-20 rounded-xl border border-border/80 bg-secondary/90 backdrop-blur-md p-4 shadow-lg flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground truncate">
           <span className="font-semibold text-foreground truncate">{provider}/{model || '—'}</span>
           <span>·</span>

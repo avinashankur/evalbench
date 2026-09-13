@@ -29,7 +29,7 @@ export function Header() {
     <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center border-b justify-between bg-sidebar/70 px-4 md:px-7 backdrop-blur-sm">
       <div className="flex items-center gap-3">
         <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-1 data-vertical:h-4" />
+        <Separator orientation="vertical" className="mr-1" />
         <span className="font-serif text-lg font-semibold tracking-tight">
           {getPageTitle()}
         </span>
