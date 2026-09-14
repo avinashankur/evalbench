@@ -30,7 +30,7 @@ export function Header() {
       <div className="flex items-center gap-3">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-1" />
-        <span className="font-serif text-lg font-semibold tracking-tight">
+        <span className="text-base font-medium tracking-tight text-foreground">
           {getPageTitle()}
         </span>
       </div>
