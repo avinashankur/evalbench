@@ -15,7 +15,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # General
 - If making an API call to the backend, make sure to read @docs/architecture/001-api-client-usage.md
-- use shadcn components everywhere possible instead of making components from sratch
+- use shadcn components everywhere possible instead of making components from scratch
 
 # UI & Visual Hierarchy Guidelines
 - **Sheet / Slide-over Drawers (Clean Monochrome - Linear/Vercel style)**:
