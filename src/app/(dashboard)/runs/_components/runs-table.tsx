@@ -63,7 +63,7 @@ export function RunsTable({
       <Table>
         <TableHeader className="bg-muted/40">
           <TableRow className="border-border/60 hover:bg-transparent">
-            <TableHead className="w-[110px] text-xs font-medium text-muted-foreground">
+            <TableHead className="w-27.5 text-xs font-medium text-muted-foreground">
               Run ID
             </TableHead>
             <TableHead className="text-xs font-medium text-muted-foreground">
@@ -87,7 +87,7 @@ export function RunsTable({
             <TableHead className="text-xs font-medium text-muted-foreground">
               Executed
             </TableHead>
-            <TableHead className="w-[120px] text-right text-xs font-medium text-muted-foreground">
+            <TableHead className="w-30 text-right text-xs font-medium text-muted-foreground">
               Actions
             </TableHead>
           </TableRow>
@@ -158,7 +158,7 @@ export function RunsTable({
                 </TableCell>
 
                 {/* Score */}
-                <TableCell className="py-3 text-right">
+                <TableCell className="py-3">
                   <div className="flex flex-col items-end gap-1">
                     <span
                       className={cn(
