@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "packageVersion": "2.3.0",
+  "installedSkills": {
+    "bro": {
+      "version": "2.3.0"
+    },
+    "code-review": {
+      "version": "2.3.0"
+    },
+    "git-commit": {
+      "version": "2.3.0"
+    },
+    "improve-codebase-architecture": {
+      "version": "2.3.0"
+    },
+    "issue-tracker-gh": {
+      "version": "2.3.0"
+    },
+    "project-docs": {
+      "version": "2.3.0"
+    }
+  }
+}
