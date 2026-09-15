@@ -110,11 +110,11 @@ export default function RunDetailPage({
 
       {/* Live Polling Alert Banner (if actively running) */}
       {isRunning && (
-        <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 p-3.5 flex items-center justify-between gap-3 animate-in fade-in duration-300">
+        <div className="rounded-xl border border-brand/30 bg-brand/5 p-3.5 flex items-center justify-between gap-3 animate-in fade-in duration-300">
           <div className="flex items-center gap-3 min-w-0">
             <span className="relative flex size-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full size-2.5 bg-blue-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand/80 opacity-75"></span>
+              <span className="relative inline-flex rounded-full size-2.5 bg-brand"></span>
             </span>
             <div className="flex items-center gap-2 min-w-0 text-xs">
               <span className="font-semibold text-foreground">

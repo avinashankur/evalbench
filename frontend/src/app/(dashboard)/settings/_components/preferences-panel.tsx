@@ -113,7 +113,7 @@ export function PreferencesPanel() {
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              <Moon className="size-3.5 text-blue-500" />
+              <Moon className="size-3.5 text-brand" />
               <span>Dark</span>
             </button>
             <button

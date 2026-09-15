@@ -100,7 +100,7 @@ export function MetricsComparisonTable({
         {/* Lowest Latency Card */}
         {fastestRun && fastestRun.latency > 0 && (
           <div className="p-4 rounded-xl border border-border/60 bg-card shadow-xs flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center shrink-0">
+            <div className="size-10 rounded-xl bg-brand/10 text-brand border border-brand/20 flex items-center justify-center shrink-0">
               <Zap className="size-5" />
             </div>
             <div className="min-w-0 flex-1">
@@ -111,7 +111,7 @@ export function MetricsComparisonTable({
                 <span className="font-semibold text-sm text-foreground truncate">
                   {selectedRuns.find((r) => r.run_id === fastestRun.runId)?.model}
                 </span>
-                <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
+                <span className="font-mono text-xs font-bold text-brand">
                   {fastestRun.latency.toFixed(0)} ms
                 </span>
               </div>
@@ -294,7 +294,7 @@ export function MetricsComparisonTable({
                         <span
                           className={cn(
                             'font-semibold',
-                            isFastest && 'text-blue-600 dark:text-blue-400'
+                            isFastest && 'text-brand'
                           )}
                         >
                           {lat > 0 ? `${lat.toFixed(0)} ms` : '—'}
@@ -303,7 +303,7 @@ export function MetricsComparisonTable({
                         {isFastest && selectedRuns.length > 1 && (
                           <Badge
                             variant="secondary"
-                            className="text-[9px] font-mono px-1 py-0 bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                            className="text-[9px] font-mono px-1 py-0 bg-brand/10 text-brand border border-brand/20"
                           >
                             Fastest
                           </Badge>

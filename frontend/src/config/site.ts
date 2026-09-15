@@ -11,7 +11,7 @@ export const siteConfig = {
   ],
 
   links: {
-    github: 'https://github.com/your-org/evalbench',
+    github: 'https://github.com/avinashankur/evalbench',
   },
 } as const
 

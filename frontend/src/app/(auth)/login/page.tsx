@@ -9,6 +9,7 @@ import { Form, FormField, SubmitButton } from '@/components/form'
 import { Input } from '@/components/ui/input'
 import { ModeToggle } from '@/components/mode-toggle'
 import { PulseDot, TicksDivider } from '@/components/landing'
+import { Logo } from '@/components/common'
 import { authClient } from '@/lib/auth-client'
 
 const loginSchema = z.object({
@@ -90,20 +91,17 @@ function LoginForm() {
         {/* Ambient Top Glow */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute top-0 left-1/4 size-96 -translate-y-1/2 rounded-full bg-blue-500/15 blur-3xl dark:bg-blue-600/20"
+          className="pointer-events-none absolute top-0 left-1/4 size-96 -translate-y-1/2 rounded-full bg-brand/15 blur-3xl dark:bg-brand/20"
         />
 
         {/* Top Wordmark & Telemetry Badge */}
         <div className="relative z-10 flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground transition-opacity hover:opacity-90 dark:text-white"
+            className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-foreground transition-opacity hover:opacity-90 dark:text-white"
           >
-            <span
-              className="inline-block h-2 w-2 rounded-xs bg-blue-600"
-              aria-hidden="true"
-            />
-            EvalBench
+            <Logo className="size-6 shrink-0 rounded-md" />
+            <span>EvalBench</span>
           </Link>
           <div className="flex items-center gap-2 rounded-full border border-border bg-background/80 px-3 py-1 font-mono text-xs text-muted-foreground backdrop-blur-xs dark:border-neutral-800 dark:bg-neutral-900/80 dark:text-neutral-400">
             <PulseDot color="bg-emerald-500" />
@@ -135,7 +133,7 @@ function LoginForm() {
             <div className="space-y-3 p-5 font-mono text-xs">
               {/* Command Invocation */}
               <div className="text-muted-foreground dark:text-neutral-400">
-                <span className="text-blue-600 dark:text-blue-400">$</span> evalbench test --suite support-agent --baseline v4.1 --candidate v4.2
+                <span className="text-brand">$</span> evalbench test --suite support-agent --baseline v4.1 --candidate v4.2
               </div>
 
               {/* Real-time execution lines */}
@@ -152,11 +150,11 @@ function LoginForm() {
                   </span>
                   <span className="text-muted-foreground dark:text-neutral-400">142ms · 0.98</span>
                 </div>
-                <div className="flex items-center justify-between text-blue-600 dark:text-blue-300">
+                <div className="flex items-center justify-between text-brand">
                   <span className="flex items-center gap-2">
-                    <span className="text-blue-600 dark:text-blue-400">▲</span> [3/128] prompt_injection_guard
+                    <span className="text-brand">▲</span> [3/128] prompt_injection_guard
                   </span>
-                  <span className="font-medium text-blue-600 dark:text-blue-400">+12.4% pass</span>
+                  <span className="font-medium text-brand">+12.4% pass</span>
                 </div>
                 <div className="flex items-center justify-between text-foreground dark:text-neutral-300">
                   <span className="flex items-center gap-2">
@@ -181,7 +179,7 @@ function LoginForm() {
                 <div className="mt-2 grid grid-cols-3 gap-2 rounded bg-muted/40 p-2.5 text-center text-xs dark:bg-neutral-950">
                   <div>
                     <span className="block text-muted-foreground dark:text-neutral-400">Score</span>
-                    <span className="font-semibold text-foreground dark:text-white">94.2 <span className="text-blue-600 font-normal dark:text-blue-400">+1.8</span></span>
+                    <span className="font-semibold text-foreground dark:text-white">94.2 <span className="text-brand font-normal">+1.8</span></span>
                   </div>
                   <div>
                     <span className="block text-muted-foreground dark:text-neutral-400">P95 Latency</span>
@@ -209,7 +207,7 @@ function LoginForm() {
         {/* Bottom Security / Protocol Marker */}
         <div className="relative z-10 flex items-center justify-between font-mono text-xs text-muted-foreground dark:text-neutral-400">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="size-4 text-blue-600 dark:text-blue-400" />
+            <ShieldCheck className="size-4 text-brand" />
             <span>Encrypted telemetry · SOC2 Type II</span>
           </div>
           <span>cluster: us-east-1</span>
@@ -236,7 +234,7 @@ function LoginForm() {
         <div className="mx-auto my-auto w-full max-w-sm py-12">
           {/* Header */}
           <div className="mb-8">
-            <div className="mb-2 font-mono text-xs font-medium text-blue-600">
+            <div className="mb-2 font-mono text-xs font-medium text-brand">
               {'// authentication'}
             </div>
             <h1 className="font-heading text-3xl font-normal tracking-tight text-foreground sm:text-4xl">
@@ -314,7 +312,7 @@ function LoginForm() {
             Don&apos;t have an account?{' '}
             <Link
               href="/signup"
-              className="font-medium text-foreground underline underline-offset-4 hover:text-blue-600"
+              className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
             >
               Create an account
             </Link>

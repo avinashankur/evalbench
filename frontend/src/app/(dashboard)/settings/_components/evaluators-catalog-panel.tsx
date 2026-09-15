@@ -219,7 +219,7 @@ export function EvaluatorsCatalogPanel() {
       case 'LLM-as-a-Judge':
         return 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
       case 'RAG Triad':
-        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+        return 'bg-brand/10 text-brand border-brand/20'
       case 'Safety':
         return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
       default:
@@ -232,7 +232,7 @@ export function EvaluatorsCatalogPanel() {
       case 'LLM-as-a-Judge':
         return <Scale className="size-3.5 text-purple-500 shrink-0" />
       case 'RAG Triad':
-        return <Sparkles className="size-3.5 text-blue-500 shrink-0" />
+        return <Sparkles className="size-3.5 text-brand shrink-0" />
       case 'Safety':
         return <ShieldAlert className="size-3.5 text-amber-500 shrink-0" />
       default:

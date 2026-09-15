@@ -74,9 +74,11 @@ EvalBench provides seamless dark and light mode support via `next-themes` and th
 | `bg-card` | `#FFFFFF` | `#141414` | Card / surface backgrounds |
 | `border-border` | `#E4E7EB` | `#262626` | Hairline borders & dividers |
 | `text-muted-foreground` | `#6B7078` | `#A1A1AA` | Secondary copy, metadata |
-| `bg-blue-600` / `text-blue-600` | `#2563EB` | `#3B82F6` (dark) | Primary brand accent & positive diffs |
+| `bg-brand` / `text-brand` | `#4F46E5` | `#818CF8` | Central brand/accent token (`--brand` in `globals.css`) |
 | `text-destructive` | `#DC2626` | `#EF4444` | Errors, regressions, alerts |
 | `text-emerald-600` | `#059669` | `#34D399` | Pass markers, test completions |
+
+> **Single Source of Truth for Brand / Accent**: The brand accent color is centralized into the `--brand` CSS variable configured in `src/app/globals.css` (`@theme inline { --color-brand: var(--brand); }`). All brand highlights across all components use `brand` utility classes (`text-brand`, `bg-brand`, `border-brand`, `bg-brand/10`, etc.). Any future theme accent color change requires modifying **only one single line** in `globals.css`.
 
 **Mode Toggle Placement**:
 - Kept in the landing page **Footer** and auth page **Top Right**, leaving primary navigation headers clean and focused.

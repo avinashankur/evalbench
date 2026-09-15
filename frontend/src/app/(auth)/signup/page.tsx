@@ -9,6 +9,7 @@ import { Form, FormField, SubmitButton } from '@/components/form'
 import { Input } from '@/components/ui/input'
 import { ModeToggle } from '@/components/mode-toggle'
 import { PulseDot, TicksDivider } from '@/components/landing'
+import { Logo } from '@/components/common'
 import { authClient } from '@/lib/auth-client'
 
 const signupSchema = z.object({
@@ -90,16 +91,13 @@ export default function SignupPage() {
         <div className="relative z-10 flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground transition-opacity hover:opacity-90"
+            className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-foreground transition-opacity hover:opacity-90"
           >
-            <span
-              className="inline-block h-2 w-2 rounded-xs bg-blue-600"
-              aria-hidden="true"
-            />
-            EvalBench
+            <Logo className="size-6 shrink-0 rounded-md" />
+            <span>EvalBench</span>
           </Link>
           <div className="flex items-center gap-2 rounded-full border border-border bg-background/80 px-3 py-1 font-mono text-xs text-muted-foreground backdrop-blur-xs">
-            <PulseDot color="bg-blue-600" />
+            <PulseDot color="bg-brand" />
             <span>v4.2</span>
           </div>
         </div>
@@ -107,12 +105,12 @@ export default function SignupPage() {
         {/* Center: Quiet, Non-Distracting Value Proposition */}
         <div className="relative z-10 my-auto max-w-md space-y-8">
           <div className="space-y-3">
-            <div className="font-mono text-xs font-medium text-blue-600">
+            <div className="font-mono text-xs font-medium text-brand">
               {'// continuous evaluation'}
             </div>
             <h2 className="font-heading text-3xl font-normal leading-snug tracking-tight text-foreground sm:text-4xl">
               The evaluation stack for teams building{' '}
-              <span className="font-serif italic text-blue-600">production</span>{' '}
+              <span className="font-serif italic text-brand">production</span>{' '}
               AI agents.
             </h2>
           </div>
@@ -120,19 +118,19 @@ export default function SignupPage() {
           {/* Minimal 3-Point Checklist */}
           <div className="space-y-3.5 text-sm text-muted-foreground">
             <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-blue-600/10 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400">
+              <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand">
                 <Check className="size-2.5 stroke-[3]" />
               </span>
               <span>Automated regression detection against baseline runs</span>
             </div>
             <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-blue-600/10 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400">
+              <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand">
                 <Check className="size-2.5 stroke-[3]" />
               </span>
               <span>Side-by-side accuracy, latency, and token cost diffs</span>
             </div>
             <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-blue-600/10 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400">
+              <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand">
                 <Check className="size-2.5 stroke-[3]" />
               </span>
               <span>Built for fast agent iteration and CI/CD pipelines</span>
@@ -142,7 +140,7 @@ export default function SignupPage() {
 
         {/* Bottom Security / Protocol Marker */}
         <div className="relative z-10 flex items-center gap-2 font-mono text-xs text-muted-foreground">
-          <ShieldCheck className="size-4 text-blue-600 dark:text-blue-400" />
+          <ShieldCheck className="size-4 text-brand" />
           <span>SOC2 Type II Certified · Encrypted telemetry pipelines</span>
         </div>
       </div>
@@ -167,7 +165,7 @@ export default function SignupPage() {
         <div className="mx-auto my-auto w-full max-w-sm py-12">
           {/* Header */}
           <div className="mb-8">
-            <div className="mb-2 font-mono text-xs font-medium text-blue-600">
+            <div className="mb-2 font-mono text-xs font-medium text-brand">
               {'// onboarding'}
             </div>
             <h1 className="font-heading text-3xl font-normal tracking-tight text-foreground sm:text-4xl">
@@ -261,7 +259,7 @@ export default function SignupPage() {
             Already have an account?{' '}
             <Link
               href="/login"
-              className="font-medium text-foreground underline underline-offset-4 hover:text-blue-600"
+              className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
             >
               Sign in
             </Link>

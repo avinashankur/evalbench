@@ -48,6 +48,7 @@ import { authClient } from '@/lib/auth-client'
 import { useHealth } from '@/modules/discovery'
 import { useListRuns } from '@/modules/runs'
 import { cn } from '@/lib/utils'
+import { Logo } from '@/components/common'
 
 interface NavItem {
   label: string
@@ -353,9 +354,7 @@ export function Sidebar({ ...props }: React.ComponentProps<typeof SidebarContain
               className="transition-colors hover:bg-sidebar-accent/80"
             >
               <Link href="/dashboard" className="flex items-center gap-2.5">
-                <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg border border-foreground/10 bg-foreground font-mono text-sm font-black text-background shadow-xs">
-                  EB
-                </div>
+                <Logo size={32} className="size-8 shrink-0 rounded-lg shadow-xs" />
                 <div className="grid flex-1 text-left text-xs leading-tight group-data-[collapsible=icon]:hidden">
                   <div className="flex items-center gap-1.5">
                     <span className="truncate font-semibold text-foreground">

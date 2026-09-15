@@ -109,7 +109,7 @@ export function SystemHealthPanel() {
           <CardContent className="p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="size-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center">
+                <div className="size-9 rounded-xl bg-brand/10 text-brand border border-brand/20 flex items-center justify-center">
                   <Database className="size-4" />
                 </div>
                 <div>
