@@ -10,4 +10,5 @@ export interface JobStatusResponse {
   error: string | null
   config_path: string | null
   message: string | null
+  owner_id?: string | null
 }

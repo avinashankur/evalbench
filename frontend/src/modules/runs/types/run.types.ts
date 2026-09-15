@@ -51,6 +51,7 @@ export interface RunSummary {
   total_test_cases: number
   created_at: string
   metrics: RunMetrics
+  owner_id?: string | null
 }
 
 export interface RunListResponse {
@@ -71,6 +72,7 @@ export interface RunSummaryResponse extends RunStatusResponse {
   total: number
   created_at: string
   metrics: RunMetrics
+  owner_id?: string | null
 }
 
 export interface TestCase {

@@ -44,6 +44,10 @@ async function request<T>(path: string, init: RequestInit = {}, timeoutMs = 15_0
     return undefined as T
   }
 
+  if (response.status === 401 && typeof window !== 'undefined') {
+    window.location.href = '/login'
+  }
+
   const body: unknown = await response.json()
 
   if (body && typeof body === 'object' && 'success' in body) {
