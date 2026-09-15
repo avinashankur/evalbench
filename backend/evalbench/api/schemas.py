@@ -56,6 +56,7 @@ class RunSummaryResponse(BaseModel):
     total: int
     created_at: datetime
     metrics: dict[str, Any]
+    owner_id: str | None = None
 
 class RunListItem(BaseModel):
     run_id: str
@@ -65,6 +66,7 @@ class RunListItem(BaseModel):
     total_test_cases: int
     created_at: datetime
     metrics: dict[str, Any]
+    owner_id: str | None = None
 
 class RunListResponse(BaseModel):
     runs: list[RunListItem]
@@ -89,3 +91,4 @@ class JobStatusResponse(BaseModel):
     error: str | None = None
     config_path: str | None = None
     message: str | None = None
+    owner_id: str | None = None

@@ -1,11 +1,11 @@
 import asyncio
 import logging
 import signal
-from evalbench.engine import EvalEngine
+
 from evalbench.config import load_config
-from evalbench.storage.redis_queue import RedisJobQueue
+from evalbench.engine import EvalEngine
 from evalbench.storage.postgres_store import PostgresResultStore
-from evalbench.storage.redis_queue import EvalJob, JobStatus
+from evalbench.storage.redis_queue import EvalJob, JobStatus, RedisJobQueue
 
 logger = logging.getLogger("evalbench.worker")
 
@@ -43,13 +43,14 @@ class Worker:
                 dataset_name=dataset.name,
                 provider=cfg.model.provider,
                 model=cfg.model.name,
+                owner_id=job.owner_id,
             )
             await self.queue.update_status(
                 job.job_id, JobStatus.COMPLETED, run_id=summary.run_id
             )
 
             logger.info("job %s completed as run %s", job.job_id, summary.run_id)
-        except Exception as e:  # noqa: BLE001 - a bad job must not kill the worker loop
+        except Exception as e:
             logger.exception("job %s failed", job.job_id)
             await self.queue.update_status(
                 job.job_id, JobStatus.FAILED, error=f"{type(e).__name__}: {e}"
@@ -58,9 +59,13 @@ class Worker:
     async def run_forever(self) -> None:
         logger.info("worker started, polling for jobs")
         while not self._stop:
-            job = await self.queue.dequeue(timeout=self.poll_timeout)
-            if job is not None:
-                await self.process_one(job)
+            try:
+                job = await self.queue.dequeue(timeout=self.poll_timeout)
+                if job is not None:
+                    await self.process_one(job)
+            except Exception as e:  # noqa: BLE001
+                logger.warning("transient error during job poll: %s", e)
+                await asyncio.sleep(1)
         logger.info("worker stopped")
 
 

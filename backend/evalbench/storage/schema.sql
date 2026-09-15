@@ -6,8 +6,12 @@ CREATE TABLE IF NOT EXISTS runs (
     model            TEXT NOT NULL,
     total_test_cases INTEGER NOT NULL,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
-    metrics          JSONB NOT NULL DEFAULT '{}'::jsonb  -- pass rates, mean scores, cost, latency per evaluator
+    metrics          JSONB NOT NULL DEFAULT '{}'::jsonb,  -- pass rates, mean scores, cost, latency per evaluator
+    owner_id         TEXT                                 -- NULL for legacy unowned runs
 );
+
+-- Backfill for existing databases where the column doesn't exist yet
+ALTER TABLE runs ADD COLUMN IF NOT EXISTS owner_id TEXT;
 
 CREATE TABLE IF NOT EXISTS test_case_results (
     id             BIGSERIAL PRIMARY KEY,
@@ -20,5 +24,6 @@ CREATE TABLE IF NOT EXISTS test_case_results (
 CREATE INDEX IF NOT EXISTS idx_test_case_results_run_id ON test_case_results(run_id);
 CREATE INDEX IF NOT EXISTS idx_runs_dataset_name ON runs(dataset_name);
 CREATE INDEX IF NOT EXISTS idx_runs_created_at ON runs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_runs_owner_id ON runs(owner_id);
 
 CREATE INDEX IF NOT EXISTS idx_runs_metrics_gin ON runs USING gin (metrics);

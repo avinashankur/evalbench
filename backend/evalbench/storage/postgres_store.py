@@ -1,6 +1,7 @@
 import asyncio
 import json
 from pathlib import Path
+from typing import Any, Self
 
 from evalbench.engine import RunSummary
 from evalbench.results import ResultStore
@@ -10,7 +11,12 @@ _SCHEMA_PATH = Path(__file__).parent / "schema.sql"
 
 
 class PostgresResultStore(ResultStore):
-    def __init__(self, dsn: str, min_pool_size: int = 1, max_pool_size: int = 10):
+    dsn: str
+    min_pool_size: int
+    max_pool_size: int
+    _pool: Any | None
+
+    def __init__(self, dsn: str, min_pool_size: int = 1, max_pool_size: int = 10) -> None:
         self.dsn = dsn
         self.min_pool_size = min_pool_size
         self.max_pool_size = max_pool_size
@@ -36,11 +42,11 @@ class PostgresResultStore(ResultStore):
             await self._pool.close()
             self._pool = None
 
-    async def __aenter__(self) -> "PostgresResultStore":
+    async def __aenter__(self) -> Self:
         await self.connect()
         return self
 
-    async def __aexit__(self, *exc) -> None:
+    async def __aexit__(self, *exc: object) -> None:
         await self.close()
 
     async def ensure_schema(self) -> None:
@@ -49,7 +55,7 @@ class PostgresResultStore(ResultStore):
         async with self._pool.acquire() as conn:
             await conn.execute(sql)
 
-    def _compute_metrics(self, summary: RunSummary) -> dict:
+    def _compute_metrics(self, summary: RunSummary) -> dict[str, Any]:
         evaluator_names = {
             r.evaluator_name
             for tcr in summary.results
@@ -74,7 +80,8 @@ class PostgresResultStore(ResultStore):
         summary: RunSummary,
         dataset_name: str = "",
         provider: str = "",
-        model: str = ""
+        model: str = "",
+        owner_id: str | None = None,
     ) -> None:
         assert self._pool is not None, "call connect() first"
         if not dataset_name and summary.results:
@@ -86,38 +93,63 @@ class PostgresResultStore(ResultStore):
 
         metrics = self._compute_metrics(summary)
 
-        async with self._pool.acquire() as conn:
-            async with conn.transaction():
-                await conn.execute(
-                    """
-                    INSERT INTO runs (run_id, dataset_name, provider, model, total_test_cases, metrics)
-                    VALUES ($1::uuid, $2, $3, $4, $5, $6::jsonb)
-                    ON CONFLICT (run_id) DO UPDATE SET metrics = EXCLUDED.metrics
-                    """,
-                    summary.run_id,
-                    dataset_name,
-                    provider,
-                    model,
-                    summary.total,
-                    json.dumps(metrics),
-                )
-                rows = [
-                    (summary.run_id, tcr.test_case.id, tcr.model_dump_json())
-                    for tcr in summary.results
-                ]
-                await conn.executemany(
-                    """
-                    INSERT INTO test_case_results (run_id, test_case_id, payload)
-                    VALUES ($1::uuid, $2, $3::jsonb)
-                    """,
-                    rows,
-                )
+        async with self._pool.acquire() as conn, conn.transaction():
+            await conn.execute(
+                """
+                INSERT INTO runs (run_id, dataset_name, provider, model, total_test_cases, metrics, owner_id)
+                VALUES ($1::uuid, $2, $3, $4, $5, $6::jsonb, $7)
+                ON CONFLICT (run_id) DO UPDATE SET
+                    metrics = EXCLUDED.metrics,
+                    owner_id = COALESCE(EXCLUDED.owner_id, runs.owner_id)
+                """,
+                summary.run_id,
+                dataset_name,
+                provider,
+                model,
+                summary.total,
+                json.dumps(metrics),
+                owner_id,
+            )
+            rows = [
+                (summary.run_id, tcr.test_case.id, tcr.model_dump_json())
+                for tcr in summary.results
+            ]
+            await conn.executemany(
+                """
+                INSERT INTO test_case_results (run_id, test_case_id, payload)
+                VALUES ($1::uuid, $2, $3::jsonb)
+                """,
+                rows,
+            )
 
-    def save(self, summary: RunSummary) -> None:
-        asyncio.run(self.asave(summary))
+    def save(
+        self,
+        summary: RunSummary,
+        dataset_name: str = "",
+        provider: str = "",
+        model: str = "",
+        owner_id: str | None = None,
+    ) -> None:
+        asyncio.run(
+            self.asave(
+                summary,
+                dataset_name=dataset_name,
+                provider=provider,
+                model=model,
+                owner_id=owner_id,
+            )
+        )
 
-    async def aload(self, run_id: str) -> RunSummary:
+    async def aload(
+        self,
+        run_id: str,
+        owner_id: str | None = None,
+        is_admin: bool = False,
+    ) -> RunSummary:
         assert self._pool is not None, "call connect() first"
+        # Verify access through aget_run first
+        await self.aget_run(run_id, owner_id=owner_id, is_admin=is_admin)
+
         async with self._pool.acquire() as conn:
             rows = await conn.fetch(
                 "SELECT payload FROM test_case_results WHERE run_id = $1::uuid ORDER BY id",
@@ -131,43 +163,77 @@ class PostgresResultStore(ResultStore):
 
         return RunSummary(run_id=run_id, total=len(results), results=results)
 
-    def load(self, run_id: str) -> RunSummary:
-        return asyncio.run(self.aload(run_id))
+    def load(
+        self,
+        run_id: str,
+        owner_id: str | None = None,
+        is_admin: bool = False,
+    ) -> RunSummary:
+        return asyncio.run(self.aload(run_id, owner_id=owner_id, is_admin=is_admin))
 
-    async def aget_run(self, run_id: str) -> dict:
+    async def aget_run(
+        self,
+        run_id: str,
+        owner_id: str | None = None,
+        is_admin: bool = False,
+    ) -> dict[str, Any]:
         assert self._pool is not None, "call connect() first"
         async with self._pool.acquire() as conn:
             row = await conn.fetchrow(
-                "SELECT run_id, dataset_name, provider, model, total_test_cases, created_at, metrics FROM runs WHERE run_id = $1::uuid",
+                """
+                SELECT run_id, dataset_name, provider, model, total_test_cases, created_at, metrics, owner_id
+                FROM runs WHERE run_id = $1::uuid
+                """,
                 run_id,
             )
         if not row:
             raise FileNotFoundError(f"no run found for run_id={run_id}")
+
+        if not is_admin and owner_id is not None:
+            run_owner = row["owner_id"]
+            if run_owner is not None and run_owner != owner_id:
+                raise PermissionError(f"Access denied for run_id={run_id}")
+
         d = dict(row)
         if isinstance(d.get("metrics"), str):
             d["metrics"] = json.loads(d["metrics"])
         return d
 
-    async def list_runs(self,
-                        dataset_name: str | None = None,
-                        limit: int = 50) -> list[dict]:
+    async def list_runs(
+        self,
+        dataset_name: str | None = None,
+        limit: int = 50,
+        owner_id: str | None = None,
+        is_admin: bool = False,
+    ) -> list[dict[str, Any]]:
         assert self._pool is not None, "call connect() first"
-        async with self._pool.acquire() as conn:
-            if dataset_name:
-                rows = await conn.fetch(
-                    """SELECT run_id, dataset_name, provider, model, total_test_cases, created_at, metrics
-                       FROM runs WHERE dataset_name = $1 ORDER BY created_at DESC LIMIT $2""",
-                    dataset_name,
-                    limit,
-                )
-            else:
-                rows = await conn.fetch(
-                    """SELECT run_id, dataset_name, provider, model, total_test_cases, created_at, metrics
-                       FROM runs ORDER BY created_at DESC LIMIT $1""",
-                    limit,
-                )
+        conditions: list[str] = []
+        params: list[Any] = []
 
-        out = []
+        if dataset_name:
+            params.append(dataset_name)
+            conditions.append(f"dataset_name = ${len(params)}")
+
+        if not is_admin and owner_id is not None:
+            params.append(owner_id)
+            conditions.append(f"(owner_id = ${len(params)} OR owner_id IS NULL)")
+
+        where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+        params.append(limit)
+        limit_clause = f"LIMIT ${len(params)}"
+
+        query = f"""
+            SELECT run_id, dataset_name, provider, model, total_test_cases, created_at, metrics, owner_id
+            FROM runs
+            {where_clause}
+            ORDER BY created_at DESC
+            {limit_clause}
+        """
+
+        async with self._pool.acquire() as conn:
+            rows = await conn.fetch(query, *params)
+
+        out: list[dict[str, Any]] = []
         for r in rows:
             d = dict(r)
             if isinstance(d.get("metrics"), str):
@@ -176,12 +242,29 @@ class PostgresResultStore(ResultStore):
 
         return out
 
-    async def adelete(self, run_id: str) -> bool:
+    async def adelete(
+        self,
+        run_id: str,
+        owner_id: str | None = None,
+        is_admin: bool = False,
+    ) -> bool:
         """Delete a run and all its test case results. Returns True if the run existed."""
         assert self._pool is not None, "call connect() first"
         async with self._pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "SELECT owner_id FROM runs WHERE run_id = $1::uuid", run_id
+            )
+            if not row:
+                return False
+
+            if not is_admin and owner_id is not None:
+                run_owner = row["owner_id"]
+                if run_owner is not None and run_owner != owner_id:
+                    raise PermissionError(f"Access denied for deleting run_id={run_id}")
+
             result = await conn.execute(
                 "DELETE FROM runs WHERE run_id = $1::uuid", run_id
             )
             # CASCADE will handle test_case_results
             return result == "DELETE 1"
+

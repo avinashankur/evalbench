@@ -1,7 +1,7 @@
 # CONTEXT.md
 
 > This file provides essential context for AI coding assistants and new contributors. It is intentionally dense — read fully before making changes.  
-> Last updated: 2026-08-28
+> Last updated: 2026-09-15
 
 ---
 
@@ -21,7 +21,7 @@
 | Configuration | pyyaml | >= 6.0.3 | Parses YAML run configurations |
 | Core Runtime | Python 3.13 | 3.13+ | Virtual environment at `.venv` |
 | Data Validation | pydantic / pydantic-settings | >= 2.13.4 / >= 2.7.0 | Enforces strict schemas (`TestCase`, `RunCreate`, `JobCreate`) |
-| Results Database | PostgreSQL (asyncpg) | >= 0.31.0 | Persistent metrics and evaluation trace storage |
+| Results Database | PostgreSQL (asyncpg) | >= 0.31.0 | Persistent metrics, evaluation trace, and Better Auth session verification |
 | Job Broker | Redis | >= 8.1.0 | Asynchronous job queue and status tracking |
 | REST API | FastAPI / Uvicorn | >= 0.115 / >= 0.30 | Web API for managing runs, jobs, and health |
 | Stemming / Search | snowballstemmer | >= 3.1.1 | In-memory tokenization & retrieval ranking |
@@ -37,6 +37,7 @@
 │   ├── api/            - REST API application and routing (FastAPI)
 │   │   ├── routers/    - Route modules (health.py, jobs.py, runs.py)
 │   │   ├── app.py      - FastAPI application factory and lifespan setup
+│   │   ├── auth.py     - Better Auth session verification & user dependency
 │   │   ├── dependencies.py - Dependency injection (RedisQueue, PostgresStore)
 │   │   ├── schemas.py  - API request and response Pydantic models
 │   │   └── settings.py - API configuration settings
@@ -49,7 +50,7 @@
 │   ├── providers/      - LLM API wrappers (OpenAI, Anthropic, Gemini, Mock)
 │   ├── retrieval/      - Document retrieval (in-memory TF/cosine sim & BM25)
 │   └── storage/        - Persistence & distributed processing
-│       ├── postgres_store.py  - PostgreSQL async persistence (asyncpg)
+│       ├── postgres_store.py  - PostgreSQL async persistence (asyncpg) & scoped queries
 │       ├── redis_queue.py     - Redis job queue management and lifecycle state
 │       ├── worker.py          - Background evaluation worker daemon
 │       └── schema.sql         - PostgreSQL database DDL schema
@@ -58,7 +59,7 @@
 ├── ARCHITECTURE.md     - High-level architecture map (C4 model)
 ├── CONTEXT.md          - AI/agent context primer
 └── docs/               - Extended documentation (PRD, ADRs, runbooks, concepts, how-tos)
-    ├── adr/            - Architecture Decision Records (001–005)
+    ├── adr/            - Architecture Decision Records (001–006)
     ├── assets/         - Documentation diagrams and media assets
     ├── concepts/       - Deep dives and algorithm documentation (001–005)
     ├── how-tos/        - Step-by-step developer guides
@@ -73,9 +74,11 @@
 **Project entry point:**
 - `evalbench/cli.py` serves as the CLI entry point (`def cli()`), exposed via the `evalbench` console script.
 
-**API Architecture:**
+**API Architecture & Security:**
 - `evalbench/api/app.py` defines the FastAPI application with routers mounted under `/api/v1` (`/health`, `/runs`, `/jobs`).
+- `evalbench/api/auth.py` provides `get_current_user` dependency validating Better Auth session cookies/tokens directly from PostgreSQL.
 - Dependency injection via `evalbench/api/dependencies.py` provides shared connections to `PostgresResultStore` and `RedisJobQueue`.
+- Runs and jobs enforce per-user data isolation (`owner_id`) with role-based admin bypass.
 
 **Module Registry:**
 - Evaluators and Providers use a registry pattern (`registry.py`) to map string identifiers to classes.

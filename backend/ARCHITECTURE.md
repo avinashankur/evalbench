@@ -1,6 +1,6 @@
 # Architecture — evalbench
 
-> **Last updated:** 2026-08-28  
+> **Last updated:** 2026-09-15  
 > **Authors:** evalbench team  
 > **Status:** Active  
 
@@ -27,7 +27,7 @@ Rel(evalbench, target_model, "Sends test prompts & retrieves responses", "HTTP /
 | System | Purpose | Owner | SLA |
 | --- | --- | --- | --- |
 | Target LLM APIs | Model inference execution (OpenAI, Anthropic, Gemini, etc.) | External Providers | Dependent on provider |
-| PostgreSQL Database | Results and evaluation metrics storage | Local/Infrastructure | High |
+| PostgreSQL Database | Results and evaluation metrics storage, Better Auth sessions | Local/Infrastructure | High |
 | Redis Server | Job queue broker and status tracking | Local/Infrastructure | High |
 
 ---
@@ -38,11 +38,11 @@ Rel(evalbench, target_model, "Sends test prompts & retrieves responses", "HTTP /
 C4Container
 Person(developer, "Developer / Client")
 Container(cli, "CLI / Entry Point", "Python 3.13+", "Entry point for running benchmark evaluations (`evalbench run`, `enqueue`, `worker`, `serve`)")
-Container(api, "REST API Server", "FastAPI", "Web interface for managing runs and jobs (`/api/v1/runs`, `/api/v1/jobs`, `/api/v1/health`)")
+Container(api, "REST API Server", "FastAPI", "Web interface for managing runs and jobs (`/api/v1/runs`, `/api/v1/jobs`, `/api/v1/health`) with Better Auth session verification")
 Container(worker, "Background Worker", "Python 3.13+", "Daemon process executing queued evaluation jobs from Redis")
 Container(engine, "Eval Core Engine", "Python 3.13+", "Core benchmarking logic, dataset loaders, providers, evaluators")
 ContainerDb(redis, "Job Queue & State", "Redis", "Queues evaluation jobs and tracks job lifecycle state")
-ContainerDb(postgres, "Results Storage", "PostgreSQL", "Stores run outputs and evaluation metrics")
+ContainerDb(postgres, "Results & Auth Storage", "PostgreSQL", "Stores run outputs, evaluation metrics, and Better Auth user/session tables")
 
 Rel(developer, cli, "Invokes", "CLI command")
 Rel(developer, api, "Calls", "HTTP")
@@ -50,7 +50,7 @@ Rel(cli, engine, "Runs locally (`run`)", "Python function calls")
 Rel(cli, redis, "Enqueues & checks status (`enqueue`, `status`)", "Redis Protocol")
 Rel(cli, postgres, "Fetches results (`status`)", "AsyncPG / TCP")
 Rel(api, redis, "Enqueues jobs & checks job status (`/jobs`)", "Redis Protocol")
-Rel(api, postgres, "Fetches run/job results & stores in-process runs", "AsyncPG / TCP")
+Rel(api, postgres, "Verifies sessions & persists scoped runs", "AsyncPG / TCP")
 Rel(worker, redis, "Polls and dequeues jobs", "Redis Protocol")
 Rel(worker, engine, "Executes jobs", "Python function calls")
 Rel(engine, postgres, "Writes benchmark outputs", "AsyncPG / TCP")
@@ -61,11 +61,11 @@ Rel(engine, postgres, "Writes benchmark outputs", "AsyncPG / TCP")
 | Container | Technology | Responsibility | Scales |
 | --- | --- | --- | --- |
 | CLI / Entry Point | Python 3.13+ | Runs local evaluations, enqueues jobs, checks status, and runs worker daemon | Local execution |
-| REST API Server | FastAPI / Uvicorn | Web endpoints for health, direct runs, and async job management | Local/Horizontal |
+| REST API Server | FastAPI / Uvicorn | Web endpoints for health, direct runs, and async job management with Better Auth session security | Local/Horizontal |
 | Background Worker | Python 3.13+ | Pulls jobs from Redis queue, runs evaluations, and records completion | Horizontal (Multi-process) |
 | Eval Core Engine | Python 3.13+ | Benchmark execution, provider abstraction, evaluator scoring, retrieval | Within worker / CLI / API |
 | Job Queue & State | Redis | Buffering queued jobs and recording per-job status metadata | Redis cluster |
-| Results Storage | PostgreSQL | Metric results and trace output persistence | Postgres cluster |
+| Results Storage | PostgreSQL | Metric results, trace output persistence, and Better Auth session storage | Postgres cluster |
 
 ---
 
@@ -81,6 +81,7 @@ graph LR
 
   subgraph API Layer
     App[api/app.py]
+    Auth[api/auth.py]
     HealthRouter[api/routers/health.py]
     JobsRouter[api/routers/jobs.py]
     RunsRouter[api/routers/runs.py]
@@ -116,8 +117,11 @@ graph LR
   App --> HealthRouter
   App --> JobsRouter
   App --> RunsRouter
+  JobsRouter --> Auth
+  RunsRouter --> Auth
   JobsRouter --> Deps
   RunsRouter --> Deps
+  Auth --> PostgresStore
   JobsRouter --> RedisQueue
   JobsRouter --> PostgresStore
   RunsRouter --> PostgresStore
@@ -142,6 +146,7 @@ graph LR
 - **Local CLI Execution** — CLI evaluations run locally via asyncio and output to JSONL, allowing quick iteration without external services ([ADR 003](docs/adr/003-use-jsonl-for-dataset-storage.md)).
 - **FastAPI Layer** — Exposes REST endpoints with in-process background task execution for lightweight runs and Redis job routing for heavy workloads ([ADR 004](docs/adr/004-fastapi-and-background-tasks-for-api-layer.md)).
 - **Redis Queue + Postgres Results Separation** — Transient job queue lifecycle state is isolated in Redis while long-term evaluation metrics and traces reside in PostgreSQL ([ADR 005](docs/adr/005-transient-redis-queue-and-postgres-result-separation.md)).
+- **Shared Session Verification & Benchmark Ownership** — Validates Better Auth sessions directly against shared PostgreSQL, scoping benchmark runs and jobs to authenticated owners with role-based admin bypass ([ADR 006](docs/adr/006-shared-session-verification-and-benchmark-ownership.md)).
 
 ---
 

@@ -20,6 +20,7 @@ class EvalJob:
     status: JobStatus = JobStatus.QUEUED
     run_id: str | None = None
     error: str | None = None
+    owner_id: str | None = None
 
     def to_json(self) -> str:
         d = asdict(self)
@@ -49,7 +50,12 @@ class RedisJobQueue:
         except ImportError as e:
             raise ImportError('redis not installed. Run: uv add "evalbench[backend]"') from e
 
-        self._client = aredis.from_url(self.redis_url, decode_responses=True)
+        self._client = aredis.from_url(
+            self.redis_url,
+            decode_responses=True,
+            socket_timeout=None,
+            socket_connect_timeout=5,
+        )
         await self._client.ping()
 
     async def close(self) -> None:
@@ -61,7 +67,7 @@ class RedisJobQueue:
         await self.connect()
         return self
 
-    async def __aexit__(self, *exc) -> None:
+    async def __aexit__(self, *exc: object) -> None:
         await self.close()
 
     def _status_key(self, job_id: str) -> str:
@@ -76,7 +82,12 @@ class RedisJobQueue:
 
     async def dequeue(self, timeout: int = 5) -> EvalJob | None:
         assert self._client is not None, "call connect() first"
-        result = await self._client.blpop(self.QUEUE_KEY, timeout=timeout)
+        try:
+            result = await self._client.blpop(self.QUEUE_KEY, timeout=timeout)
+        except (TimeoutError, Exception) as e:
+            if "Timeout" in type(e).__name__:
+                return None
+            raise
 
         if result is None:
             return None
