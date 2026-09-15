@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { ModeToggle } from '@/components/mode-toggle'
+import { Logo } from '@/components/common'
+import { siteConfig } from '@/config/site'
 import { cn } from '@/lib/utils'
 
 interface FooterProps {
@@ -19,11 +21,8 @@ export function Footer({ className }: FooterProps) {
         href="/"
         className="flex items-center gap-2 font-semibold tracking-tight text-foreground transition-opacity hover:opacity-80"
       >
-        <span
-          className="inline-block h-2 w-2 rounded-xs bg-blue-600"
-          aria-hidden="true"
-        />
-        EvalBench
+        <Logo className="size-5 shrink-0 rounded-sm" />
+        <span>EvalBench</span>
       </Link>
 
       {/* Footer Navigation Links + Theme Toggle */}
@@ -35,7 +34,7 @@ export function Footer({ className }: FooterProps) {
           Docs
         </Link>
         <a
-          href="https://github.com/avinashankur/evalbench"
+          href={siteConfig.links.github}
           target="_blank"
           rel="noopener noreferrer"
           className="transition-colors hover:text-foreground"

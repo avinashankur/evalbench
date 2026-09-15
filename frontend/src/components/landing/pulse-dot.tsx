@@ -5,7 +5,7 @@ interface PulseDotProps {
   color?: string
 }
 
-export function PulseDot({ className, color = 'bg-blue-600' }: PulseDotProps) {
+export function PulseDot({ className, color = 'bg-brand' }: PulseDotProps) {
   return (
     <span className={cn('relative inline-flex items-center justify-center', className)}>
       <span className={cn('h-1.5 w-1.5 rounded-full', color)} />

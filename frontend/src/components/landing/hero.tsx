@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { PulseDot } from '@/components/landing/pulse-dot'
 import { Scoreboard } from '@/components/landing/scoreboard'
 import { buttonVariants } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { authClient } from '@/lib/auth-client'
 
@@ -14,6 +15,7 @@ interface HeroProps {
 export function Hero({ className }: HeroProps) {
   const { data: session } = authClient.useSession()
   const evalHref = session?.user ? '/runs/new' : '/signup'
+
   return (
     <section
       className={cn('relative mx-auto max-w-6xl px-6 pt-16 pb-14 sm:px-8 sm:pt-20', className)}
@@ -38,37 +40,38 @@ export function Hero({ className }: HeroProps) {
       {/* Hero Content */}
       <div className="relative z-10">
         {/* Eyebrow */}
-        <div className="mb-5 flex items-center gap-2 font-mono text-xs font-medium text-blue-600">
-          <PulseDot />
-          <span>214 runs evaluated today</span>
+        <div className="mb-6">
+          <Badge variant="outline" className="font-mono text-[11px] text-muted-foreground hidden sm:inline-flex">
+            10 Evaluators · RAG Triad · Multi-Provider
+          </Badge>
         </div>
 
         {/* Headline */}
-        <h1 className="font-heading text-foreground max-w-3xl text-4xl leading-tight font-normal tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-          Every agent change,{' '}
-          <span className="font-serif font-normal text-blue-600 italic">measured</span> against the
-          last one.
+        <h1 className="font-heading text-foreground max-w-4xl text-4xl leading-tight font-normal tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+          AI changes,{' '}
+          <span className="font-serif font-normal text-brand italic">measured</span> against ground
+          truth.
         </h1>
 
         {/* Subtitle */}
         <p className="text-muted-foreground mt-5 max-w-2xl font-sans text-base leading-relaxed sm:text-lg md:text-xl">
-          EvalBench runs your test suites against every agent version and shows exactly what got
-          better, worse, or broke — before it reaches production.
+          Benchmark LLMs and RAG pipelines for accuracy, latency, and cost before shipping to production.
         </p>
 
         {/* Actions */}
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link
             href={evalHref}
-            className={cn(buttonVariants({ variant: 'default', size: 'lg' }))}
+            className={cn(buttonVariants({ variant: 'default', size: 'lg' }), 'gap-2')}
           >
-            Run your first eval
+            <span>Run your first eval</span>
           </Link>
+
           <Link
             href="/docs"
-            className={cn(buttonVariants({ variant: 'outline', size: 'lg' }))}
+            className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'gap-2')}
           >
-            Read the docs
+            <span>Read the docs</span>
           </Link>
         </div>
 

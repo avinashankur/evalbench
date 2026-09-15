@@ -15,7 +15,7 @@ export function SectionHeader({
 }: SectionHeaderProps) {
   return (
     <div className={cn('mb-11 max-w-2xl', className)}>
-      <div className="mb-2.5 font-mono text-xs font-medium text-blue-600">
+      <div className="mb-2.5 font-mono text-xs font-medium text-brand">
         {kicker}
       </div>
       <h2 className="font-serif text-3xl font-normal tracking-tight text-foreground">

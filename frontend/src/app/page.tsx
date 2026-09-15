@@ -4,6 +4,8 @@ import {
   TicksDivider,
   TrackingFeatures,
   ComparisonTable,
+  HowItWorks,
+  OpenSourceStrip,
   CtaStrip,
   Footer,
 } from '@/components/landing'
@@ -18,11 +20,13 @@ export default function HomePage() {
         <TrackingFeatures />
         <TicksDivider />
         <ComparisonTable />
+        <TicksDivider />
+        <HowItWorks />
+        <TicksDivider />
+        <OpenSourceStrip />
         <CtaStrip />
       </main>
       <Footer />
     </div>
   )
 }
-
-

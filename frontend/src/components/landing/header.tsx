@@ -27,6 +27,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { authClient } from '@/lib/auth-client'
+import { Logo } from '@/components/common'
 
 export const Header = () => {
   const router = useRouter()
@@ -46,10 +47,8 @@ export const Header = () => {
   }
 
   const navLinks = [
-    { label: 'Product', href: '#product' },
-    { label: 'Docs', href: '#docs' },
-    { label: 'Changelog', href: '#changelog' },
-    { label: 'Pricing', href: '#pricing' },
+    { label: 'Docs', href: '/docs' },
+    { label: 'Dashboard', href: '/dashboard' },
   ]
 
   return (
@@ -61,13 +60,10 @@ export const Header = () => {
         {/* Brand Wordmark */}
         <Link
           href="/"
-          className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground transition-opacity hover:opacity-90"
+          className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-foreground transition-opacity hover:opacity-90"
         >
-          <span
-            className="inline-block h-2 w-2 rounded-xs bg-blue-600"
-            aria-hidden="true"
-          />
-          EvalBench
+          <Logo className="size-6 shrink-0 rounded-md" />
+          <span>EvalBench</span>
         </Link>
 
         {/* Desktop Nav Links */}
@@ -98,7 +94,7 @@ export const Header = () => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  className="group relative flex size-8 cursor-pointer items-center justify-center rounded-full border border-border/80 bg-background transition-all hover:border-blue-600/60 hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="group relative flex size-8 cursor-pointer items-center justify-center rounded-full border border-border/80 bg-background transition-all hover:border-brand/60 hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="User station menu"
                 >
                   <Avatar className="size-full">
@@ -108,7 +104,7 @@ export const Header = () => {
                         alt={session.user.name || session.user.email}
                       />
                     )}
-                    <AvatarFallback className="bg-blue-600 text-xs font-semibold text-white">
+                    <AvatarFallback className="bg-brand text-xs font-semibold text-white">
                       {(session.user.name?.[0] || session.user.email[0]).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -123,8 +119,8 @@ export const Header = () => {
                   {/* Station HUD Identity Header */}
                   <div className="border-b border-border/70 bg-muted/30 p-3.5 dark:border-neutral-800 dark:bg-neutral-950/60">
                     <div className="flex items-center justify-between pb-2 font-mono text-[10px] text-muted-foreground">
-                      <span className="font-medium text-blue-600 dark:text-blue-400">
-                        // eval workbench
+                      <span className="font-medium text-brand">
+                        {'// eval workbench'}
                       </span>
                       {/* <div className="flex items-center gap-1.5">
                         <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -139,7 +135,7 @@ export const Header = () => {
                             alt={session.user.name || session.user.email}
                           />
                         )}
-                        <AvatarFallback className="bg-blue-600 text-xs font-semibold text-white">
+                        <AvatarFallback className="bg-brand text-xs font-semibold text-white">
                           {(session.user.name?.[0] || session.user.email[0]).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -303,7 +299,7 @@ export const Header = () => {
                         alt={session.user.name || session.user.email}
                       />
                     )}
-                    <AvatarFallback className="bg-blue-600 text-sm font-semibold text-white">
+                    <AvatarFallback className="bg-brand text-sm font-semibold text-white">
                       {(session.user.name?.[0] || session.user.email[0]).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
