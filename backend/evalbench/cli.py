@@ -1,12 +1,29 @@
 import asyncio
+import os
+from pathlib import Path
 
 import click
 
 from evalbench.config import load_config
 from evalbench.results import JSONLResultStore
 
-_DEFAULT_REDIS_URL = "redis://localhost:6379/0"
-_DEFAULT_POSTGRES_DSN = "postgresql://postgres:postgres@localhost/evalbench"
+# Automatically load .env if present
+for _env_path in [Path(".env"), Path(__file__).resolve().parent.parent / ".env"]:
+    if _env_path.exists():
+        with _env_path.open(encoding="utf-8") as _f:
+            for _line in _f:
+                _line = _line.strip()
+                if _line and not _line.startswith("#") and "=" in _line:
+                    _k, _v = _line.split("=", 1)
+                    _k = _k.strip()
+                    _v = _v.strip().strip("'\"")
+                    if _k not in os.environ:
+                        os.environ[_k] = _v
+
+_DEFAULT_REDIS_URL = os.getenv("EVALBENCH_REDIS_URL", "redis://localhost:6379/0")
+_DEFAULT_POSTGRES_DSN = os.getenv(
+    "EVALBENCH_POSTGRES_DSN", "postgresql://postgres:postgres@localhost/evalbench"
+)
 
 
 def _progress_bar(completed: int, total: int) -> None:

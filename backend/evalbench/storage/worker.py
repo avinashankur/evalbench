@@ -98,12 +98,30 @@ async def _main(redis_url: str, postgres_dsn: str) -> None:
 
 def main() -> None:
     import argparse
+    import os
+    from pathlib import Path
+
+    # Automatically load .env if present
+    for env_path in [Path(".env"), Path(__file__).resolve().parent.parent.parent / ".env"]:
+        if env_path.exists():
+            with env_path.open(encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        k = k.strip()
+                        v = v.strip().strip("'\"")
+                        if k not in os.environ:
+                            os.environ[k] = v
+
+    default_redis = os.getenv("EVALBENCH_REDIS_URL", "redis://localhost:6379/0")
+    default_postgres = os.getenv(
+        "EVALBENCH_POSTGRES_DSN", "postgresql://postgres:postgres@localhost/evalbench"
+    )
 
     parser = argparse.ArgumentParser(description="EvalBench evaluation worker")
-    parser.add_argument("--redis-url", default="redis://localhost:6379/0")
-    parser.add_argument(
-        "--postgres-dsn", default="postgresql://postgres:postgres@localhost/evalbench"
-    )
+    parser.add_argument("--redis-url", default=default_redis)
+    parser.add_argument("--postgres-dsn", default=default_postgres)
     args = parser.parse_args()
     asyncio.run(_main(args.redis_url, args.postgres_dsn))
 
