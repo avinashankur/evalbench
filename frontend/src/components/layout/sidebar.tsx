@@ -354,8 +354,10 @@ export function Sidebar({ ...props }: React.ComponentProps<typeof SidebarContain
               className="transition-colors hover:bg-sidebar-accent/80"
             >
               <Link href="/dashboard" className="flex items-center gap-2.5">
-                <Logo size={32} className="size-8 shrink-0 rounded-lg shadow-xs" />
-                <div className="grid flex-1 text-left text-xs leading-tight group-data-[collapsible=icon]:hidden">
+                <div>
+                  <Logo className="shrink-0 rounded-lg shadow-xs" />
+                </div>
+                <div className="grid text-left text-xs leading-tight group-data-[collapsible=icon]:hidden">
                   <div className="flex items-center gap-1.5">
                     <span className="truncate font-semibold text-foreground">
                       {siteConfig.name}
